@@ -1,0 +1,11 @@
+com\fcl\users\UserAccount.class
+com\fcl\adhocs\Test.class
+com\fcl\users\JsonMap.class
+com\fcl\users\PlayerProfile.class
+com\fcl\users\UserServices.class
+com\fcl\MyResource.class
+com\fcl\users\NewUserRestService.class
+com\fcl\users\UserRestService.class
+com\fcl\users\UserServicesImpl.class
+com\fcl\Main.class
+com\fcl\adhocs\DatabaseConnect.class
