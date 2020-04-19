@@ -1,0 +1,27 @@
+** Postgres docker help **
+
+https://hackernoon.com/dont-install-postgres-docker-pull-postgres-bee20e200198
+
+
+** postgresql 17 important commands **
+psql -d database -U user -W	-- connect to database
+/l 				-- list available databases
+/c <dbname> <username> 		-- change to database
+/dt				-- list available tables
+/d <tablename>			-- desctibe table
+\dn				-- list all schemas for that db
+\du				-- list all users for that db
+\df				-- list all functions for that db
+\dv				-- list all views for that db
+\g				-- execute the previous command
+\s [filename]			-- list command history [optionally to a file]
+\i <filename>			-- read commands from a file
+\?				-- list all plsql commands
+\h ALTER TABLE			-- list help on scpecific postgres statements
+\timing				-- turn on/off query execution time
+\e				-- use editor to write query
+\a				-- switch output from alighned to non-aligned column format
+/H				-- format output to HTML
+\q				-- quit psql
+
+
