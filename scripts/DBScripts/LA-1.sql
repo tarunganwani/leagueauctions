@@ -9,6 +9,7 @@ create table IF NOT EXISTS la_schema.la_user (
 	email_id	TEXT 	NOT NULL,
 	password_hash	TEXT 	NOT NULL,
 	password_salt	TEXT 	NOT NULL,
+	isActive        BOOLEAN	NOT NULL DEFAULT TRUE,
 
 	PRIMARY KEY(user_id)
 );	
@@ -23,6 +24,7 @@ create table IF NOT EXISTS la_schema.la_player (
 	player_profile_link	TEXT,
 	player_type		TEXT,
 	player_photo		BYTEA,
+	isActive        	BOOLEAN	NOT NULL DEFAULT TRUE,
 	PRIMARY KEY(player_id)
 );
 
@@ -55,6 +57,7 @@ create table IF NOT EXISTS la_schema.la_auctionboard (
 	auction_id	SERIAL 		NOT NULL,
 	auctioneer_id	INT		NOT NULL,
 	schedule_time	TIMESTAMPTZ	NOT NULL,
+	isActive        BOOLEAN		NOT NULL DEFAULT TRUE,
 	PRIMARY KEY(auction_id),
 	FOREIGN KEY(auctioneer_id) REFERENCES la_schema.la_player(player_id)
 );
