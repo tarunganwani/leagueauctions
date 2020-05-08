@@ -24,6 +24,7 @@ create table IF NOT EXISTS la_schema.la_player (
 	player_profile_link	TEXT,
 	player_type		TEXT,
 	player_photo		BYTEA,
+	is_active	BOOLEAN 	DEFAULT TRUE NOT NULL,
 	PRIMARY KEY(player_id)
 );
 
