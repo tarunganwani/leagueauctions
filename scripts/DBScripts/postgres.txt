@@ -1,9 +1,19 @@
-** Postgres docker help **
 
-https://hackernoon.com/dont-install-postgres-docker-pull-postgres-bee20e200198
+*****************************************************************************************************************************************
+Starting postgre on ubuntu box
+sudo -u postgres psql
+*****************************************************************************************************************************************
 
 
-** postgresql 17 important commands **
+
+*****************************************************************************************************************************************
+Postgres docker help - https://hackernoon.com/dont-install-postgres-docker-pull-postgres-bee20e200198
+*****************************************************************************************************************************************
+
+
+*****************************************************************************************************************************************
+postgresql 17 important commands
+*****************************************************************************************************************************************
 psql -d database -U user -W	-- connect to database
 /l 				-- list available databases
 /c <dbname> <username> 		-- change to database
@@ -25,3 +35,20 @@ psql -d database -U user -W	-- connect to database
 \q				-- quit psql
 
 
+
+*****************************************************************************************************************************************
+Go-Postgres connectivity issues
+*****************************************************************************************************************************************
+Problem #1 : By default postgres does not have any db password set on ubuntu. Now apparently this is an  issue while conencting to the database 
+
+FAIL: TestNonExistentUser (0.01s)
+	/home/tg/go/src/github.com/leagueauctions/usermgmt/test/model_test.go:48: pq: password authentication failed for user "postgres"
+
+Solution for problem #1 :
+
+change postgres user password. this is sorta required to connect to league auction database and access tables 
+inside psql prompt
+>> ALTER USER postgres PASSWORD 'newPassword';
+https://stackoverflow.com/questions/7695962/postgresql-password-authentication-failed-for-user-postgres
+
+-----------------------------------------------------------------------------------------------------------------------------------------
