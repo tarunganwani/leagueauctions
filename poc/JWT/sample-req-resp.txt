@@ -1,0 +1,14 @@
+
+/signin
+http://localhost:8000/signin
+Request:
+{"username" :"user1", "password":"password1"}
+Response: 
+{"Token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNTg4OTA2NTYzfQ.T1f4JlWn17o88BPh_oYqgPl2JY-kOZdd6NzkRDzMD1k",
+"Expiry":"2020-05-08 08:26:03.81038799 +0530 IST m=+551.569576516"}
+
+/welcome
+Request:
+{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InVzZXIxIiwiZXhwIjoxNTg4OTA2MzU5fQ.BEJRkH0uHLqgo1lrK2RgneHU2Wigodt6poq2sqcTv04"}
+Response:
+Welcome user1
