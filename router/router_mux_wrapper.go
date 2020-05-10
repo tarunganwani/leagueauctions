@@ -38,8 +38,8 @@ func (m *MuxWrapper)Init(cfg Config) error{
 //Serve - start the router to serve any requests
 func (m *MuxWrapper)Serve() error{
 	srvAdd := m.routerconfig.HostAddress + ":" + utils.IntToString(m.routerconfig.PortNo)
-	return errors.New("Serve not implemented. Address " + srvAdd)
-	//http.ListenAndServe(srvAdd, r.router)
+	// return errors.New("Serve not implemented. Address " + srvAdd)
+	return http.ListenAndServe(srvAdd, m.router)
 }
 
 //HandleRoute - handle specific route

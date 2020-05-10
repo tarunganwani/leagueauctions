@@ -15,7 +15,7 @@ import (
 
 
 func initDBAndRouter(t *testing.T) router.Wrapper{
-	db, err := openPostgreDatabase("postgres", "postgres", "leagueauction")
+	db, err := utils.openPostgreDatabase("postgres", "postgres", "leagueauction")
 	if err != nil{
 		t.Fatal(err)
 	}

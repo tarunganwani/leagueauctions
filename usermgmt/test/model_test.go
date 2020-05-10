@@ -4,8 +4,8 @@ package test
 import (
 	"testing"
 	"database/sql"
-	_ "github.com/lib/pq"
 	"github.com/leagueauctions/usermgmt"
+	"github.com/leagueauctions/utils"
 )
 
 func CheckError(t *testing.T, err error){
@@ -13,12 +13,6 @@ func CheckError(t *testing.T, err error){
 		t.Fatal(err)
 	}
 }
-
-func openPostgreDatabase(user, pwd, dbname string) (*sql.DB, error){
-	connectionString := usermgmt.GetPostgresConnectionString(user, pwd, dbname)
-	return sql.Open("postgres", connectionString)
-}
-
 
 
 func clearUserTable(t *testing.T, db *sql.DB) error{
@@ -40,13 +34,13 @@ func createuser(db *sql.DB, email, pwdhash, pwdsalt string) (usermgmt.User, erro
 }
 
 func TestDBConnection(t *testing.T) {
-	_, err := openPostgreDatabase("postgres", "", "leagueauction")
+	_, err := utils.openPostgreDatabase("postgres", "", "leagueauction")
 	CheckError(t, err)
 }
 
 func TestNonExistentUser(t *testing.T) {
 
-	db, err := openPostgreDatabase("postgres", "postgres", "leagueauction")
+	db, err := utils.openPostgreDatabase("postgres", "postgres", "leagueauction")
 	CheckError(t, err)
 	err = clearUserTable(t, db)
 	if (err != nil){
@@ -62,7 +56,7 @@ func TestNonExistentUser(t *testing.T) {
 
 func TestCreateFreshUsers(t *testing.T) {
 
-	db, err := openPostgreDatabase("postgres", "postgres", "leagueauction")
+	db, err := utils.openPostgreDatabase("postgres", "postgres", "leagueauction")
 	CheckError(t, err)
 	err = clearUserTable(t, db)
 	if (err != nil){
@@ -89,7 +83,7 @@ func TestCreateFreshUsers(t *testing.T) {
 
 func TestUpdateUser(t *testing.T) {
 
-	db, err := openPostgreDatabase("postgres", "postgres", "leagueauction")
+	db, err := utils.openPostgreDatabase("postgres", "postgres", "leagueauction")
 	CheckError(t, err)
 	err = clearUserTable(t, db)
 	if (err != nil){
@@ -122,7 +116,7 @@ func TestUpdateUser(t *testing.T) {
 
 func TestDeleteUser(t *testing.T) {
 
-	db, err := openPostgreDatabase("postgres", "postgres", "leagueauction")
+	db, err := utils.openPostgreDatabase("postgres", "postgres", "leagueauction")
 	CheckError(t, err)
 	err = clearUserTable(t, db)
 	if (err != nil){

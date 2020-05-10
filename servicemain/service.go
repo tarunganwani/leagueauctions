@@ -1,24 +1,33 @@
 package servicemain
 
 import(
+	"database/sql"
 	"github.com/leagueauctions/router"
 	"github.com/leagueauctions/usermgmt"
+	"github.com/leagueauctions/utils"
 )
 
 //LeagueAuction - main app structure
 type LeagueAuction struct{
 	routerCfg router.Config
 	router router.Wrapper
+	dbObject *sql.DB
 }
 
 func (la *LeagueAuction)initUserMgmtRoutes(r router.Wrapper) error{
+
+	dbObject, err := utils.OpenPostgreDatabase("postgres", "postgres", "leagueauction")
+	if err != nil{
+		return err
+	}
+
 	usrMgmtRouter := new(usermgmt.Router)
-	return usrMgmtRouter.Init(r)
+	return usrMgmtRouter.Init(r, dbObject)
 }
 
 //InitApp - initialize league auction server
 func (la *LeagueAuction)InitApp(routerCfg router.Config) error{
-	la.router = router.MuxWrapper{}
+	la.router = new(router.MuxWrapper)
 	err := la.router.Init(routerCfg)
 	if err != nil{
 		return err

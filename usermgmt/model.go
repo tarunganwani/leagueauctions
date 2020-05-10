@@ -3,7 +3,6 @@ package usermgmt
 
 import (
 	"database/sql"
-   	"fmt"
 )
 
 //User - business object to represent database la_user object
@@ -28,10 +27,6 @@ const (
 	DeleteUserQuery = "UPDATE la_schema.la_user SET is_active = FALSE WHERE user_id = $1 OR email_id = $2"
 )
 
-//GetPostgresConnectionString - gets connection string for postgres
-func GetPostgresConnectionString(user, password, dbname string) string{
-	return fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, password, dbname)
-}
 //GetUser - fetch user from database
 func (u *User)GetUser(db *sql.DB) error{
 	return db.QueryRow(SelectUserByEmailIDQuery,u.EmailID).Scan(&u.UserID, &u.PasswordHash, &u.PasswordSalt, &u.IsActive)
