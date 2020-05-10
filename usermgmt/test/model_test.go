@@ -34,13 +34,13 @@ func createuser(db *sql.DB, email, pwdhash, pwdsalt string) (usermgmt.User, erro
 }
 
 func TestDBConnection(t *testing.T) {
-	_, err := utils.openPostgreDatabase("postgres", "", "leagueauction")
+	_, err := utils.OpenPostgreDatabase("postgres", "", "leagueauction")
 	CheckError(t, err)
 }
 
 func TestNonExistentUser(t *testing.T) {
 
-	db, err := utils.openPostgreDatabase("postgres", "postgres", "leagueauction")
+	db, err := utils.OpenPostgreDatabase("postgres", "postgres", "leagueauction")
 	CheckError(t, err)
 	err = clearUserTable(t, db)
 	if (err != nil){
@@ -56,7 +56,7 @@ func TestNonExistentUser(t *testing.T) {
 
 func TestCreateFreshUsers(t *testing.T) {
 
-	db, err := utils.openPostgreDatabase("postgres", "postgres", "leagueauction")
+	db, err := utils.OpenPostgreDatabase("postgres", "postgres", "leagueauction")
 	CheckError(t, err)
 	err = clearUserTable(t, db)
 	if (err != nil){
@@ -83,7 +83,7 @@ func TestCreateFreshUsers(t *testing.T) {
 
 func TestUpdateUser(t *testing.T) {
 
-	db, err := utils.openPostgreDatabase("postgres", "postgres", "leagueauction")
+	db, err := utils.OpenPostgreDatabase("postgres", "postgres", "leagueauction")
 	CheckError(t, err)
 	err = clearUserTable(t, db)
 	if (err != nil){
@@ -116,7 +116,7 @@ func TestUpdateUser(t *testing.T) {
 
 func TestDeleteUser(t *testing.T) {
 
-	db, err := utils.openPostgreDatabase("postgres", "postgres", "leagueauction")
+	db, err := utils.OpenPostgreDatabase("postgres", "postgres", "leagueauction")
 	CheckError(t, err)
 	err = clearUserTable(t, db)
 	if (err != nil){
