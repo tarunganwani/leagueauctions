@@ -11,6 +11,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/leagueauctions/usermgmt"
 	"github.com/leagueauctions/router"
+	"github.com/leagueauctions/utils"
 )
 
 
