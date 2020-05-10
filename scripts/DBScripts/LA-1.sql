@@ -9,6 +9,7 @@ create table IF NOT EXISTS la_schema.la_user (
 	email_id	TEXT 	NOT NULL,
 	password_hash	TEXT 	NOT NULL,
 	password_salt	TEXT 	NOT NULL,
+	activation_code	TEXT,
 	is_active	BOOLEAN 	DEFAULT TRUE NOT NULL,
 
 	PRIMARY KEY(user_id)
@@ -57,7 +58,7 @@ create table IF NOT EXISTS la_schema.la_auctionboard (
 	auction_id	SERIAL 		NOT NULL,
 	auctioneer_id	INT		NOT NULL,
 	schedule_time	TIMESTAMPTZ	NOT NULL,
-	is_active	BOOLEAN 	DEFAULT TRUE NOT NULL,
+	is_active	BOOLEAN 	DEFAULT FALSE NOT NULL,
 	PRIMARY KEY(auction_id),
 	FOREIGN KEY(auctioneer_id) REFERENCES la_schema.la_player(player_id)
 );

@@ -14,6 +14,7 @@ drop table if exists la_schema.la_bidderinfo		cascade;
 drop table if exists la_schema.la_bid_transaction	cascade;
 
 drop schema if exists la_schema;
+\c postgres
 drop database if exists leagueauction;
 
 
