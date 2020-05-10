@@ -42,7 +42,7 @@ Go-Postgres connectivity issues
 Problem #1 : By default postgres does not have any db password set on ubuntu. Now apparently this is an  issue while conencting to the database 
 
 FAIL: TestNonExistentUser (0.01s)
-	/home/tg/go/src/github.com/leagueauctions/usermgmt/test/model_test.go:48: pq: password authentication failed for user "postgres"
+	/home/tg/go/src/github.com/leagueauctions/server/usermgmt/test/model_test.go:48: pq: password authentication failed for user "postgres"
 
 Solution for problem #1 :
 

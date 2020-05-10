@@ -2,9 +2,9 @@ package servicemain
 
 import(
 	"database/sql"
-	"github.com/leagueauctions/router"
-	"github.com/leagueauctions/usermgmt"
-	"github.com/leagueauctions/utils"
+	"github.com/leagueauctions/server/router"
+	"github.com/leagueauctions/server/usermgmt"
+	"github.com/leagueauctions/server/utils"
 )
 
 //LeagueAuction - main app structure

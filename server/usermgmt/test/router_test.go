@@ -9,9 +9,9 @@ import (
 	"bytes"
 	// "fmt"
 	_ "github.com/lib/pq"
-	"github.com/leagueauctions/usermgmt"
-	"github.com/leagueauctions/router"
-	"github.com/leagueauctions/utils"
+	"github.com/leagueauctions/server/usermgmt"
+	"github.com/leagueauctions/server/router"
+	"github.com/leagueauctions/server/utils"
 )
 
 

@@ -3,7 +3,7 @@ package test
 import(
 	"fmt"
 	"testing"
-	"github.com/leagueauctions/utils"
+	"github.com/leagueauctions/server/utils"
 )
 
 var numgenTests = []struct {

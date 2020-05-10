@@ -1,8 +1,8 @@
 package main
 
 import(
-	"github.com/leagueauctions/servicemain"
-	"github.com/leagueauctions/router"
+	"github.com/leagueauctions/server/servicemain"
+	"github.com/leagueauctions/server/router"
 	_ "github.com/lib/pq"
 	"log"
 )

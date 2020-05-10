@@ -6,7 +6,7 @@ import(
 	"errors"
 	"regexp"
 	"github.com/gorilla/mux"
-	"github.com/leagueauctions/utils"
+	"github.com/leagueauctions/server/utils"
 
 	// "fmt"
 )
