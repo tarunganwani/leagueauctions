@@ -4,4 +4,7 @@ package router
 type Config struct{
 	HostAddress string
 	PortNo int
+	Secure bool
+	CertFilePath string
+	KeyPath string
 }

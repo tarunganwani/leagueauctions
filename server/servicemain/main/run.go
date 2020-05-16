@@ -9,7 +9,13 @@ import(
 
 func main(){
 	
-	routerCfg := router.Config{HostAddress: "localhost", PortNo : 8081}
+	routerCfg := router.Config{
+		HostAddress: "localhost", 
+		PortNo : 8081, 
+		Secure : true,
+		CertFilePath : "../../certs/cert.pem",
+		KeyPath : "../../certs/key.pem",
+	}
 	laService := new(servicemain.LeagueAuction)
 	log.Println("Initializing service")
 	err := laService.InitApp(routerCfg)
