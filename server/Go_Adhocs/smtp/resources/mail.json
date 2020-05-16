@@ -1,0 +1,7 @@
+{
+"smtp.server":"smtp.gmail.com"
+"smtp.port":"587"
+"smtp.sender":"leagueauctions@gmail.com"
+"smtp.sender.password":"League@123"
+"smtp.recipient":"leagueauctions@gmail.com"
+}
