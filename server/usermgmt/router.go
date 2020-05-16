@@ -6,8 +6,8 @@ import(
 	"errors"
 	"time"
 	"database/sql"
-	"github.com/leagueauctions/router"
-	"github.com/leagueauctions/utils"
+	"github.com/leagueauctions/server/router"
+	"github.com/leagueauctions/server/utils"
 )
 
 //Router - user management router object

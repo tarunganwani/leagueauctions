@@ -2,9 +2,9 @@ package servicemain
 
 import(
 	"database/sql"
-	"github.com/leagueauctions/router"
-	"github.com/leagueauctions/usermgmt"
-	"github.com/leagueauctions/utils"
+	"github.com/leagueauctions/server/router"
+	"github.com/leagueauctions/server/usermgmt"
+	"github.com/leagueauctions/server/utils"
 )
 
 //LeagueAuction - main app structure
@@ -14,12 +14,18 @@ type LeagueAuction struct{
 	dbObject *sql.DB
 }
 
-func (la *LeagueAuction)initUserMgmtRoutes(r router.Wrapper) error{
+func (la *LeagueAuction)initDatabase() (*sql.DB, error){
 
+	//TODO: move hardcoded values to database config object
 	dbObject, err := utils.OpenPostgreDatabase("postgres", "postgres", "leagueauction")
 	if err != nil{
-		return err
+		return nil, err
 	}
+	return dbObject, nil
+
+}
+
+func (la *LeagueAuction)initUserMgmtRoutes(r router.Wrapper, dbObject *sql.DB) error{
 
 	usrMgmtRouter := new(usermgmt.Router)
 	return usrMgmtRouter.Init(r, dbObject)
@@ -32,7 +38,11 @@ func (la *LeagueAuction)InitApp(routerCfg router.Config) error{
 	if err != nil{
 		return err
 	}
-	err = la.initUserMgmtRoutes(la.router)
+	dbObj, err := la.initDatabase()
+	if err != nil{
+		return err
+	}
+	err = la.initUserMgmtRoutes(la.router, dbObj)
 	if err != nil{
 		return err
 	}

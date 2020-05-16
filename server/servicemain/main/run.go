@@ -1,15 +1,21 @@
 package main
 
 import(
-	"github.com/leagueauctions/servicemain"
-	"github.com/leagueauctions/router"
+	"github.com/leagueauctions/server/servicemain"
+	"github.com/leagueauctions/server/router"
 	_ "github.com/lib/pq"
 	"log"
 )
 
 func main(){
 	
-	routerCfg := router.Config{HostAddress: "localhost", PortNo : 8081}
+	routerCfg := router.Config{
+		HostAddress: "localhost", 
+		PortNo : 8081, 
+		Secure : true,
+		CertFilePath : "../../certs/cert.pem",
+		KeyPath : "../../certs/key.pem",
+	}
 	laService := new(servicemain.LeagueAuction)
 	log.Println("Initializing service")
 	err := laService.InitApp(routerCfg)

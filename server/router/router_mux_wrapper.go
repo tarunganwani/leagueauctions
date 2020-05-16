@@ -6,7 +6,7 @@ import(
 	"errors"
 	"regexp"
 	"github.com/gorilla/mux"
-	"github.com/leagueauctions/utils"
+	"github.com/leagueauctions/server/utils"
 
 	// "fmt"
 )
@@ -28,9 +28,10 @@ type MuxWrapper struct{
 
 //Init - initialize Mux wrapper
 func (m *MuxWrapper)Init(cfg Config) error{
-	// fmt.Println("Initializing Mux Wrapper")
+	if cfg.Secure == false{
+		return errors.New("Router only implemented in secure(https) mode")
+	}
 	m.router = new(mux.Router)
-	// fmt.Println("m.router ", m.router)
 	m.routerconfig = cfg
 	return nil
 }
@@ -39,7 +40,7 @@ func (m *MuxWrapper)Init(cfg Config) error{
 func (m *MuxWrapper)Serve() error{
 	srvAdd := m.routerconfig.HostAddress + ":" + utils.IntToString(m.routerconfig.PortNo)
 	// return errors.New("Serve not implemented. Address " + srvAdd)
-	return http.ListenAndServe(srvAdd, m.router)
+	return http.ListenAndServeTLS(srvAdd, m.routerconfig.CertFilePath, m.routerconfig.KeyPath, m.router)
 }
 
 //HandleRoute - handle specific route

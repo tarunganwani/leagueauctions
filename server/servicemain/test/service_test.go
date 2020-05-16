@@ -2,8 +2,8 @@ package test
 
 import (
 	"testing"
-	"github.com/leagueauctions/servicemain"
-	"github.com/leagueauctions/router"
+	"github.com/leagueauctions/server/servicemain"
+	"github.com/leagueauctions/server/router"
 )
 
 func TestLaService(t *testing.T) {

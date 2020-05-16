@@ -9,9 +9,9 @@ import (
 	"bytes"
 	// "fmt"
 	_ "github.com/lib/pq"
-	"github.com/leagueauctions/usermgmt"
-	"github.com/leagueauctions/router"
-	"github.com/leagueauctions/utils"
+	"github.com/leagueauctions/server/usermgmt"
+	"github.com/leagueauctions/server/router"
+	"github.com/leagueauctions/server/utils"
 )
 
 
@@ -26,7 +26,13 @@ func initDBAndRouter(t *testing.T) router.Wrapper{
 	}
 
 	var r router.Wrapper = new(router.MuxWrapper)
-	routerCfg := router.Config{HostAddress: "localhost", PortNo : 8081}
+	routerCfg := router.Config{
+		HostAddress: "localhost", 
+		PortNo : 8081, 
+		Secure: true,
+		CertFilePath : "../../certs/cert.pem",
+		KeyPath : "../../certs/key.pem",
+	}
 	err = r.Init(routerCfg)
 	if (err != nil){
 		t.Fatal(err)

@@ -4,8 +4,8 @@ package test
 import (
 	"testing"
 	"database/sql"
-	"github.com/leagueauctions/usermgmt"
-	"github.com/leagueauctions/utils"
+	"github.com/leagueauctions/server/usermgmt"
+	"github.com/leagueauctions/server/utils"
 )
 
 func CheckError(t *testing.T, err error){
