@@ -6,6 +6,7 @@ go get -u github.com/gorilla/mux
 go get -u golang.org/x/crypto/bcrypt
 go get -u github.com/lib/pq
 go get -u github.com/dgrijalva/jwt-go
+go get -u github.com/gorilla/handlers
 
 # running the service(from code)
 $ cd leagueauctions/servicemain/main

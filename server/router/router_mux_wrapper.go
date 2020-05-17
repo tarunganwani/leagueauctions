@@ -6,6 +6,7 @@ import(
 	"errors"
 	"regexp"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
 	"github.com/leagueauctions/server/utils"
 
 	// "fmt"
@@ -39,8 +40,11 @@ func (m *MuxWrapper)Init(cfg Config) error{
 //Serve - start the router to serve any requests
 func (m *MuxWrapper)Serve() error{
 	srvAdd := m.routerconfig.HostAddress + ":" + utils.IntToString(m.routerconfig.PortNo)
-	// return errors.New("Serve not implemented. Address " + srvAdd)
-	return http.ListenAndServeTLS(srvAdd, m.routerconfig.CertFilePath, m.routerconfig.KeyPath, m.router)
+	return http.ListenAndServeTLS(srvAdd, m.routerconfig.CertFilePath, m.routerconfig.KeyPath, 
+		handlers.CORS(
+			handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), 
+				handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), 
+				handlers.AllowedOrigins([]string{"*"}))(m.router))
 }
 
 //HandleRoute - handle specific route
