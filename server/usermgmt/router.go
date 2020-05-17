@@ -78,7 +78,7 @@ func (u *Router)RegisterUserHandler(w http.ResponseWriter, r* http.Request){
 	
 	var registerRequestObj RegisterRequest
 	err  := json.NewDecoder(r.Body).Decode(&registerRequestObj)
-	if err != nil{
+	if err != nil || registerRequestObj.UserID == "" || registerRequestObj.Password == ""{
 		u.respondWithError(w, http.StatusBadRequest, "invalid register json request")
 		return
 	}
@@ -116,13 +116,9 @@ func (u *Router)RegisterUserHandler(w http.ResponseWriter, r* http.Request){
 	} 
 	//else error is nil - user already exists
 	//if is_active or is_verified is true simply ignore the request
-	status := ""
 	if(user.IsActive == true){
-		status += "user already verified and active"
-	}
-	if status != "" {
-		resp := RegisterResponse{Status : "user already active"}
-		u.respondWithJSON(w, http.StatusOK, resp)
+		resp := RegisterResponse{Status : "user already registered"}
+		u.respondWithJSON(w, http.StatusCreated, resp)
 		return
 	}
 
@@ -141,22 +137,24 @@ func (u *Router)ActivateUserHandler(w http.ResponseWriter,r *http.Request){
 
 	var activationRequest UserActivationRequest
 	err := json.NewDecoder(r.Body).Decode(&activationRequest)
-	if err != nil{
+	if err != nil || activationRequest.UserID == "" || activationRequest.ActivationCode == ""{
 		u.respondWithError(w, http.StatusBadRequest, "invalid activation request")
 		return
 	}
 	
-	if isActivationValid := ValidateActivationCode(activationRequest); isActivationValid{
-		user := User{EmailID: activationRequest.UserID}
-		err = user.GetUser(u.modelDB)
-		if(err != nil){	//user doesnt exist
-			if err == sql.ErrNoRows{
-				u.respondWithError(w, http.StatusNotFound, "activation error : user not found")
-				return
-			}
-			u.respondWithError(w, http.StatusInternalServerError, "activation error : " + err.Error())
+	user := User{EmailID: activationRequest.UserID}
+	err = user.GetUser(u.modelDB)
+	if(err != nil){	//user doesnt exist
+		if err == sql.ErrNoRows{
+			u.respondWithError(w, http.StatusNotFound, "activation error : user not found")
 			return
 		}
+		u.respondWithError(w, http.StatusInternalServerError, "activation error : " + err.Error())
+		return
+	}
+
+	if isActivationValid := ValidateActivationCode(activationRequest); isActivationValid{
+		
 		//Set is verified and is active to true
 		user.IsActive = true
 		err = user.UpdateUser(u.modelDB)
@@ -183,7 +181,7 @@ func (u * Router)UserLoginHandler(w http.ResponseWriter, r *http.Request){
 
 	var loginRequest LogInRequest
 	err := json.NewDecoder(r.Body).Decode(&loginRequest)
-	if err != nil{
+	if err != nil || loginRequest.UserID == "" || loginRequest.Password == ""{
 		u.respondWithError(w, http.StatusBadRequest, "invalid login request")
 		return
 	}
@@ -199,13 +197,20 @@ func (u * Router)UserLoginHandler(w http.ResponseWriter, r *http.Request){
 		u.respondWithError(w, http.StatusInternalServerError, "unexpected error while fetching user - login")
 		return
 	} 
-	//validate Password
-	passwordsMatch, err := utils.ComparePasswords(userObj.PasswordHash, loginRequest.Password)
-	if err != nil{
-		u.respondWithError(w, http.StatusInternalServerError, "error while matching passwords - login")
+
+	//Check if user activation is already done
+	if userObj.IsActive == false{
+		u.respondWithError(w, http.StatusForbidden, "user activation required")
 		return
 	}
-	if passwordsMatch == false {
+
+	//validate Password
+	passwordsMatch, err := utils.ComparePasswords(userObj.PasswordHash, loginRequest.Password)
+	if passwordsMatch == false{
+		if err != nil {
+			u.respondWithError(w, http.StatusUnauthorized, "passwords do not match")
+			return
+		}
 		u.respondWithError(w, http.StatusUnauthorized, "invalid password")
 		return
 	}

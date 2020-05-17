@@ -10,7 +10,7 @@ create table IF NOT EXISTS la_schema.la_user (
 	password_hash	TEXT 	NOT NULL,
 	password_salt	TEXT 	NOT NULL,
 	activation_code	TEXT,
-	is_active	BOOLEAN 	DEFAULT TRUE NOT NULL,
+	is_active	BOOLEAN 	DEFAULT FALSE NOT NULL,
 
 	PRIMARY KEY(user_id)
 );	

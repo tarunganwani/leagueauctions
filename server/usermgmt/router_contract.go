@@ -3,7 +3,7 @@ package usermgmt
 //LogInRequest - user log in request
 type LogInRequest struct {
 	UserID			string	`json:"user_id"`
-	Password		string	`json:"password"`
+	Password		string	`json:"user_password"`
 }
 
 //LogInResponse - user login(or successful registration) response
