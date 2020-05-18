@@ -68,11 +68,11 @@ func TestEmptyTokenRoute(t *testing.T) {
 }
 
 
-func TestRegisterNewUser(t *testing.T){
+func TestRegisterActivationLoginExistingUser(t *testing.T){
 
 	r := initDBAndRouter(t)
 	
-	var RegistrationJSONReqStr = []byte(`{"user_id":"x@x.com", "password": "pwd123"}`)
+	var RegistrationJSONReqStr = []byte(`{"user_id":"x@x.com", "user_password": "pwd123"}`)
 	req, _ := http.NewRequest("POST", "/user/register", bytes.NewBuffer(RegistrationJSONReqStr))
 	response := executeRequest(r, req)
 	if response.Code != http.StatusOK{
@@ -99,6 +99,20 @@ func TestRegisterNewUser(t *testing.T){
 		t.Fatal("Expected valid login response. Actual: ", loginResponse)
 	}
 
+	var loginJSONRequest = []byte(`{"user_id":"x@x.com", "user_password": "pwd123"}`)
+	req, _ = http.NewRequest("POST", "/user/login", bytes.NewBuffer(loginJSONRequest))
+	response = executeRequest(r, req)
+	if response.Code != http.StatusOK {
+		var m map[string]string
+		json.Unmarshal(response.Body.Bytes(), &m)
+		t.Error("Actual code ", response.Code)
+		t.Fatal("Actual error ", m["error"])
+	}
+	json.Unmarshal(response.Body.Bytes(), &loginResponse)
+	if loginResponse.Token == "" || loginResponse.Expiry == ""{
+		t.Fatal("Expected valid login response. Actual: ", loginResponse)
+	}
+
 	getUserInfoRequestStr := "{\"user_id\":\"x@x.com\", \"token_string\": \""+loginResponse.Token+"\"}"
 	var getUserInfoRequest = []byte(getUserInfoRequestStr)
 	req, _ = http.NewRequest("GET", "/user/info", bytes.NewBuffer(getUserInfoRequest))
@@ -116,6 +130,117 @@ func TestRegisterNewUser(t *testing.T){
 		t.Fatal("Expected valid user info. Actual: ", userInfoResponse)
 	}
 	// fmt.Println("userInfoResponse", userInfoResponse)
+}
+
+
+func TestInvalidActivationCode(t *testing.T){
+
+	r := initDBAndRouter(t)
+	
+	var RegistrationJSONReqStr = []byte(`{"user_id":"x@x.com", "user_password": "pwd123"}`)
+	req, _ := http.NewRequest("POST", "/user/register", bytes.NewBuffer(RegistrationJSONReqStr))
+	response := executeRequest(r, req)
+
+	var activationJSONRequest = []byte(`{"user_id":"x@x.com", "user_activation_code": "wrong_code"}`)
+	req, _ = http.NewRequest("POST", "/user/activation", bytes.NewBuffer(activationJSONRequest))
+	response = executeRequest(r, req)
+	if response.Code != http.StatusUnauthorized {
+		var m map[string]string
+		json.Unmarshal(response.Body.Bytes(), &m)
+		t.Error("Actual error ", m["error"])
+		t.Fatal("Actual code ", response.Code, "Expected" , http.StatusUnauthorized)
+	}
+}
+
+func TestInvalidUserPassword(t *testing.T){
+
+	r := initDBAndRouter(t)
+	
+	var RegistrationJSONReqStr = []byte(`{"user_id":"x@x.com", "user_password": "pwd123"}`)
+	req, _ := http.NewRequest("POST", "/user/register", bytes.NewBuffer(RegistrationJSONReqStr))
+	response := executeRequest(r, req)
+
+	var activationJSONRequest = []byte(`{"user_id":"x@x.com", "user_activation_code": "123456"}`)
+	req, _ = http.NewRequest("POST", "/user/activation", bytes.NewBuffer(activationJSONRequest))
+	response = executeRequest(r, req)
+	
+	var loginJSONRequest = []byte(`{"user_id":"x@x.com", "user_password": "pwd1234"}`)
+	req, _ = http.NewRequest("POST", "/user/login", bytes.NewBuffer(loginJSONRequest))
+	response = executeRequest(r, req)
+	if response.Code != http.StatusUnauthorized {
+		var m map[string]string
+		json.Unmarshal(response.Body.Bytes(), &m)
+		t.Error("Actual error ", m["error"])
+		t.Fatal("Actual code ", response.Code, "Expected" , http.StatusUnauthorized)
+	}
+}
+
+
+func TestLoginWithoutActivation(t *testing.T){
+
+	r := initDBAndRouter(t)
+	
+	var RegistrationJSONReqStr = []byte(`{"user_id":"x@x.com", "user_password": "pwd123"}`)
+	req, _ := http.NewRequest("POST", "/user/register", bytes.NewBuffer(RegistrationJSONReqStr))
+	response := executeRequest(r, req)
+
+	var activationJSONRequest = []byte(`{"user_id":"x@x.com", "user_activation_code": "123456"}`)
+	req, _ = http.NewRequest("POST", "/user/activation", bytes.NewBuffer(activationJSONRequest))
+	response = executeRequest(r, req)
+	
+	req, _ = http.NewRequest("POST", "/user/register", bytes.NewBuffer(RegistrationJSONReqStr))
+	response = executeRequest(r, req)
+	if response.Code != http.StatusCreated {
+		t.Fatal("should get created response once user activation is done")
+	}
+}
+
+
+func TestAlreadyRegisteredUser(t *testing.T){
+
+	r := initDBAndRouter(t)
+	
+	var RegistrationJSONReqStr = []byte(`{"user_id":"x@x.com", "user_password": "pwd123"}`)
+	req, _ := http.NewRequest("POST", "/user/register", bytes.NewBuffer(RegistrationJSONReqStr))
+	response := executeRequest(r, req)
+
+	var loginJSONRequest = []byte(`{"user_id":"x@x.com", "user_password": "pwd123"}`)
+	req, _ = http.NewRequest("POST", "/user/login", bytes.NewBuffer(loginJSONRequest))
+	response = executeRequest(r, req)
+	if response.Code != http.StatusForbidden {
+		t.Fatal("Expected activation error")
+	}
+}
+
+var ErrorRequestTests = []struct {
+	reqquestURI		string
+	reqquestMethod	string
+	payloadJSON		[]byte
+	expectedStatus  int
+}{
+	{"/user/register", "POST", []byte(`{"id":"x@x.com", "user_password": "pwd123"}`), http.StatusBadRequest},
+	{"/user/register", "POST", []byte(`{"user_id":"x@x.com", "password": "pwd123"}`), http.StatusBadRequest},
+	{"/user/activation", "POST", []byte(`{"user_id":"x@x.com", "code": "123456"}`), http.StatusBadRequest},
+	{"/user/activation", "POST", []byte(`{"id":"x@x.com", "user_activation_code": "123456"}`), http.StatusBadRequest},
+	{"/user/login", "POST", []byte(`{"id":"x@x.com", "user_password": "pwd123"}`), http.StatusBadRequest},
+	{"/user/login", "POST", []byte(`{"user_id":"x@x.com", "password": "pwd123"}`), http.StatusBadRequest},
+
+	{"/user/login", "POST", []byte(`{"user_id":"x@x.com", "user_password": "pwd123"}`), http.StatusNotFound},
+	{"/user/activation", "POST", []byte(`{"user_id":"x@x.com", "user_activation_code": "123456"}`), http.StatusNotFound},
+
+}
+func TestErrorRequests(t *testing.T){
+
+	r := initDBAndRouter(t)
+	
+	for _, test := range ErrorRequestTests{
+		req, _ := http.NewRequest(test.reqquestMethod, test.reqquestURI, bytes.NewBuffer(test.payloadJSON))
+		response := executeRequest(r, req)
+		if response.Code != test.expectedStatus{
+			t.Fatal("Expected code ", test.expectedStatus, "Actual code", response.Code)
+		}
+	}
+
 }
 
 //TODO: write more tests for negative cases

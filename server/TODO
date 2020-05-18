@@ -8,3 +8,8 @@ Issues to be addressed
 2020/05/16 18:00:19 http: TLS handshake error from [::1]:47722: tls: first record does not look like a TLS handshake
 2020/05/16 18:00:41 http2: server: error reading preface from client [::1]:47726: remote error: tls: bad certificate
 2020/05/16 18:00:41 http2: server: error reading preface from client [::1]:47728: remote error: tls: bad certificate
+
+2. CORS 
+handlers.AllowedOrigins allows all remote origins("*") right now. check if this is okay.
+
+3. Server Logging
