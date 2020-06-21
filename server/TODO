@@ -13,3 +13,7 @@ Issues to be addressed
 handlers.AllowedOrigins allows all remote origins("*") right now. check if this is okay.
 
 3. Server Logging
+
+4. SSL Certificate 
+ For Dev we are using self signed certs and bypassing all the security checks in android
+ 

@@ -1,8 +1,0 @@
-{
-  "appId": "io.ionic.leagueauctions",
-  "appName": "leagueauctions",
-  "bundledWebRuntime": false,
-  "npmClient": "npm",
-  "webDir": "build",
-  "cordova": {}
-}
