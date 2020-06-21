@@ -1,30 +1,31 @@
 package main
 
-import(
-	"github.com/leagueauctions/server/servicemain"
-	"github.com/leagueauctions/server/router"
-	_ "github.com/lib/pq"
+import (
 	"log"
+
+	"github.com/leagueauctions/server/router"
+	"github.com/leagueauctions/server/servicemain"
+	_ "github.com/lib/pq"
 )
 
-func main(){
-	
+func main() {
+
 	routerCfg := router.Config{
-		HostAddress: "localhost", 
-		PortNo : 8081, 
-		Secure : true,
-		CertFilePath : "../../certs/cert.pem",
-		KeyPath : "../../certs/key.pem",
+		HostAddress:  "192.168.1.22",
+		PortNo:       8080,
+		Secure:       true,
+		CertFilePath: "../../certs/cert1.cer",
+		KeyPath:      "../../certs/key1.cer",
 	}
 	laService := new(servicemain.LeagueAuction)
 	log.Println("Initializing service")
 	err := laService.InitApp(routerCfg)
-	if err != nil{
+	if err != nil {
 		log.Fatal(err.Error())
 	}
 	log.Println("Running service on port ", routerCfg.PortNo)
 	err = laService.RunLeagueAuctionServer()
-	if err != nil{
+	if err != nil {
 		log.Fatal(err.Error())
 	}
 }
