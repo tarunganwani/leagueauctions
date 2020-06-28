@@ -1,7 +1,0 @@
-{
-    "name": "leagueauctions",
-    "integrations": {
-      "capacitor": {}
-    },
-    "type": "react"
-  }
