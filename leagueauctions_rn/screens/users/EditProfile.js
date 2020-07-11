@@ -17,7 +17,7 @@ const { width: WIDTH } = Dimensions.get('window')
 // import { Ionicons } from 'react-native-vector-icons/Ionicons';
 // import { MaterialIcons } from 'react-native-vector-icons/MaterialIcons';
 
-const Profile = () => {
+const EditProfile = () => {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -52,7 +52,8 @@ const Profile = () => {
                     <TextInput style={styles.input}
                         placeholder={'CricHeroes Profile Link'}
                     />
-                    <TouchableOpacity style={styles.buttonContainer} >
+                    <TouchableOpacity style={styles.buttonContainer}
+                        onPress={() => { props.navigation.navigate('HomePage') }}>
                         <Text style={styles.text}>Save</Text>
                     </TouchableOpacity>
                 </View>
@@ -264,4 +265,4 @@ const styles = StyleSheet.create({
     },
 })
 
-export default Profile;
+export default EditProfile;

@@ -132,8 +132,8 @@ const Register = (props) => {
             <View style={styles.buttonContainer}>
                 {isLoading ? (<ActivityIndicator size="small" />)
                     : (
-                        <TouchableOpacity onPress={() => { props.navigation.navigate('ProfilePage') }}>
-                            <Text style={styles.text}>Login</Text>
+                        <TouchableOpacity onPress={() => { props.navigation.navigate('OtpPage') }}>
+                            <Text style={styles.text}>Register</Text>
                         </TouchableOpacity>
                     )}
             </View>

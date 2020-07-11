@@ -5,7 +5,7 @@ import AuthScreen from '../screens/users/AuthScreen';
 import Register from '../screens/users/Register';
 import VerifyOtp from '../screens/users/VerifyOtp'
 import FirstScreen from '../screens/users/FirstScreen';
-import Profile from '../screens/users/Profile';
+import EditProfile from '../screens/users/EditProfile';
 import TestScreen from '../screens/users/TestScreen';
 
 const AppNavigator = createStackNavigator({
@@ -17,7 +17,7 @@ const AuthNavigator = createStackNavigator({
     LoginPage: AuthScreen,
     RegisterPage: Register,
     OtpPage: VerifyOtp,
-    ProfilePage: Profile
+    EditProfilePage: EditProfile
 }, {
     initialRouteName: 'StartPage'
 });
