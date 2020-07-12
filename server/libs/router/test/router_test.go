@@ -2,7 +2,7 @@ package test
 
 import(
 	"testing"
-	"github.com/leagueauctions/server/router"
+	"github.com/leagueauctions/server/libs/router"
 	// "fmt"
 )
 

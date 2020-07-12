@@ -6,7 +6,7 @@ import(
 	"errors"
 	"time"
 	"database/sql"
-	"github.com/leagueauctions/server/router"
+	"github.com/leagueauctions/server/libs/router"
 	"github.com/leagueauctions/server/utils"
 )
 

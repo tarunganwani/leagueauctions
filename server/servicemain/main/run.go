@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/leagueauctions/server/router"
+	"github.com/leagueauctions/server/libs/router"
 	"github.com/leagueauctions/server/servicemain"
 	_ "github.com/lib/pq"
 )

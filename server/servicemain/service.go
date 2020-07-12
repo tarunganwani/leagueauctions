@@ -2,7 +2,7 @@ package servicemain
 
 import(
 	"database/sql"
-	"github.com/leagueauctions/server/router"
+	"github.com/leagueauctions/server/libs/router"
 	"github.com/leagueauctions/server/usermgmt"
 	"github.com/leagueauctions/server/utils"
 )
@@ -31,22 +31,28 @@ func (la *LeagueAuction)initUserMgmtRoutes(r router.Wrapper, dbObject *sql.DB) e
 	return usrMgmtRouter.Init(r, dbObject)
 }
 
-//InitApp - initialize league auction server
-func (la *LeagueAuction)InitApp(routerCfg router.Config) error{
-	la.router = new(router.MuxWrapper)
-	err := la.router.Init(routerCfg)
-	if err != nil{
-		return err
-	}
-	dbObj, err := la.initDatabase()
-	if err != nil{
-		return err
-	}
-	err = la.initUserMgmtRoutes(la.router, dbObj)
-	if err != nil{
+func (la *LeagueAuction)setupEndpoints(r router.Wrapper, dbObject *sql.DB) error{
+	
+	if err := la.initUserMgmtRoutes(r, dbObject); err != nil{
 		return err
 	}
 	return nil
+}
+
+//InitApp - initialize league auction server
+func (la *LeagueAuction)InitApp(routerCfg router.Config) (err error){
+	la.router = new(router.MuxWrapper)
+	if err = la.router.Init(routerCfg); err != nil{
+		return
+	}
+	var dbObj *sql.DB
+	if dbObj, err = la.initDatabase(); err != nil{
+		return
+	}
+	if err = la.setupEndpoints(la.router, dbObj); err != nil{
+		return
+	}
+	return
 }
 
 
