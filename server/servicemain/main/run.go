@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/leagueauctions/server/libs/router"
 	"github.com/leagueauctions/server/servicemain"
@@ -10,12 +11,21 @@ import (
 
 func main() {
 
+	certsdir := ""
+	if certsdir = os.Getenv("CERT_DIR"); certsdir == ""{
+		log.Fatal("CERT_DIR environment variable not set")
+	}
+
+	certfilepath := certsdir + "/cert1.cer"
+	keypath := certsdir + "/key1.cer"
+
 	routerCfg := router.Config{
-		HostAddress:  "192.168.1.22",
-		PortNo:       8080,
+		// HostAddress:  "192.168.1.22",
+		HostAddress:  "127.0.0.1",
+		PortNo:       8081,
 		Secure:       true,
-		CertFilePath: "../../certs/cert1.cer",
-		KeyPath:      "../../certs/key1.cer",
+		CertFilePath: certfilepath,
+		KeyPath:      keypath,
 	}
 	laService := new(servicemain.LeagueAuction)
 	log.Println("Initializing service")
