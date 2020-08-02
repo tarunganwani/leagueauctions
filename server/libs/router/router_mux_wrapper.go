@@ -29,9 +29,6 @@ type MuxWrapper struct{
 
 //Init - initialize Mux wrapper
 func (m *MuxWrapper)Init(cfg Config) error{
-	if cfg.Secure == false{
-		return errors.New("Router only implemented in secure(https) mode")
-	}
 	m.router = new(mux.Router)
 	m.routerconfig = cfg
 	return nil
@@ -40,11 +37,25 @@ func (m *MuxWrapper)Init(cfg Config) error{
 //Serve - start the router to serve any requests
 func (m *MuxWrapper)Serve() error{
 	srvAdd := m.routerconfig.HostAddress + ":" + utils.IntToString(m.routerconfig.PortNo)
+
+	allowedHeaders := []string{"X-Requested-With", "Content-Type", "Authorization"}
+	allowedMethods := []string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}
+	allowedOrigins := []string{"*"}
+
+	if m.routerconfig.Secure == false{
+		// fmt.Println("serve in-secure")
+		return http.ListenAndServe(srvAdd, handlers.CORS(
+				handlers.AllowedHeaders(allowedHeaders), 
+				handlers.AllowedMethods(allowedMethods), 
+				handlers.AllowedOrigins(allowedOrigins))(m.router))
+	}
+
+	// fmt.Println("serve secured..")
 	return http.ListenAndServeTLS(srvAdd, m.routerconfig.CertFilePath, m.routerconfig.KeyPath, 
 		handlers.CORS(
-			handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), 
-				handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), 
-				handlers.AllowedOrigins([]string{"*"}))(m.router))
+			handlers.AllowedHeaders(allowedHeaders), 
+				handlers.AllowedMethods(allowedMethods), 
+				handlers.AllowedOrigins(allowedOrigins))(m.router))
 }
 
 //HandleRoute - handle specific route
