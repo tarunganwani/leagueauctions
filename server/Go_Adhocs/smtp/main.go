@@ -1,7 +1,7 @@
 package main
 
 import (
-	utils "smtp/utils"
+	utils "github.com/leagueauctions/server/Go_Adhocs/smtp/utils"
 )
 
 func main() {

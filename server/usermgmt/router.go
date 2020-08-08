@@ -9,8 +9,13 @@ import (
 	"os"
 	"strconv"
 	"time"
+<<<<<<< HEAD
 
 	"github.com/leagueauctions/server/router"
+=======
+	"database/sql"
+	"github.com/leagueauctions/server/libs/router"
+>>>>>>> upstream/master
 	"github.com/leagueauctions/server/utils"
 )
 

@@ -3,7 +3,7 @@ package test
 import (
 	"testing"
 	"github.com/leagueauctions/server/servicemain"
-	"github.com/leagueauctions/server/router"
+	"github.com/leagueauctions/server/libs/router"
 )
 
 func TestLaService(t *testing.T) {

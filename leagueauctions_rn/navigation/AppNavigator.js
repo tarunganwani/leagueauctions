@@ -6,11 +6,7 @@ import Register from '../screens/users/Register';
 import VerifyOtp from '../screens/users/VerifyOtp'
 import FirstScreen from '../screens/users/FirstScreen';
 import EditProfile from '../screens/users/EditProfile';
-import TestScreen from '../screens/users/TestScreen';
-
-const AppNavigator = createStackNavigator({
-    HomePage: TestScreen
-});
+import AuctionsNavigator from './AuctionsNavigator';
 
 const AuthNavigator = createStackNavigator({
     StartPage: FirstScreen,
@@ -24,7 +20,7 @@ const AuthNavigator = createStackNavigator({
 
 const MainNavigator = createSwitchNavigator({
     AuthPage: AuthNavigator,
-    AppPage: AppNavigator
+    AppPage: AuctionsNavigator,
 }, {
     initialRouteName: 'AuthPage'
 });

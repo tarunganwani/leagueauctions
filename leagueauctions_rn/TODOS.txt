@@ -1,4 +1,4 @@
 1) SSL Certs
-2) Auto Detect Otp message from Mobile :- https://github.com/faizalshap/react-native-otp-verify   and  
-					   https://tech.goibibo.com/building-otp-verification-component-in-react-native-with-auto-read-from-sms-2a9a400015b0   
-Currently using the following library for OTP : https://github.com/tttstudios/react-native-otp-input
+2) run the entire code in android
+2) Currently using the following library for OTP : https://github.com/tttstudios/react-native-otp-input
+Install the following module for otp screen to work with android "npm install --save @react-native-community/clipboard"

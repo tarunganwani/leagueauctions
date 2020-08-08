@@ -10,7 +10,7 @@ import (
 	// "fmt"
 	_ "github.com/lib/pq"
 	"github.com/leagueauctions/server/usermgmt"
-	"github.com/leagueauctions/server/router"
+	"github.com/leagueauctions/server/libs/router"
 	"github.com/leagueauctions/server/utils"
 )
 

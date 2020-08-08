@@ -18,7 +18,7 @@ const VerifyOtp = (props) => {
             <Text>Enter OTP sent to your EMAIL ID</Text>
             <OTPInputView
                 style={styles.otpInput}
-                pinCount={4}
+                pinCount={6}
                 placeholderTextColor={'blue'}
                 // code={this.state.code} //You can supply this prop or not. The component will be used as a controlled / uncontrolled component respectively.
                 // onCodeChanged = {code => { this.setState({code})}}
