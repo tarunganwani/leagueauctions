@@ -15,7 +15,7 @@ import (
 )
 
 
-func initDBAndRouter(t *testing.T) router.Wrapper{
+func initDBAndRouter(t *testing.T) *router.MuxWrapper{
 	db, err := utils.OpenPostgreDatabase("postgres", "postgres", "leagueauction")
 	if err != nil{
 		t.Fatal(err)
@@ -25,7 +25,7 @@ func initDBAndRouter(t *testing.T) router.Wrapper{
 		t.Fatal(err)
 	}
 
-	var r router.Wrapper = new(router.MuxWrapper)
+	var r *router.MuxWrapper = new(router.MuxWrapper)
 	routerCfg := router.Config{
 		HostAddress: "localhost", 
 		PortNo : 8081, 
@@ -46,7 +46,7 @@ func initDBAndRouter(t *testing.T) router.Wrapper{
 	return r
 }
 
-func executeRequest(r router.Wrapper, req *http.Request) *httptest.ResponseRecorder {
+func executeRequest(r *router.MuxWrapper, req *http.Request) *httptest.ResponseRecorder {
     rr := httptest.NewRecorder()
     r.ServeHTTP(rr, req)
     return rr
@@ -126,7 +126,7 @@ func TestRegisterActivationLoginExistingUser(t *testing.T){
 
 	var userInfoResponse usermgmt.UserInfoResponse
 	json.Unmarshal(response.Body.Bytes(), &userInfoResponse)
-	if userInfoResponse.UserSerialID < 0 || userInfoResponse.IsActive == false{
+	if userInfoResponse.UserSerialID == "" || userInfoResponse.IsActive == false{
 		t.Fatal("Expected valid user info. Actual: ", userInfoResponse)
 	}
 	// fmt.Println("userInfoResponse", userInfoResponse)

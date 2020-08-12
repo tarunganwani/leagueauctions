@@ -10,7 +10,7 @@ import(
 //LeagueAuction - main app structure
 type LeagueAuction struct{
 	routerCfg router.Config
-	router router.Wrapper
+	router *router.MuxWrapper
 	dbObject *sql.DB
 }
 
@@ -25,13 +25,13 @@ func (la *LeagueAuction)initDatabase() (*sql.DB, error){
 
 }
 
-func (la *LeagueAuction)initUserMgmtRoutes(r router.Wrapper, dbObject *sql.DB) error{
+func (la *LeagueAuction)initUserMgmtRoutes(r *router.MuxWrapper, dbObject *sql.DB) error{
 
 	usrMgmtRouter := new(usermgmt.Router)
 	return usrMgmtRouter.Init(r, dbObject)
 }
 
-func (la *LeagueAuction)setupEndpoints(r router.Wrapper, dbObject *sql.DB) error{
+func (la *LeagueAuction)setupEndpoints(r *router.MuxWrapper, dbObject *sql.DB) error{
 	
 	if err := la.initUserMgmtRoutes(r, dbObject); err != nil{
 		return err

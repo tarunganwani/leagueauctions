@@ -37,7 +37,7 @@ type UserInfoRequest struct {
 
 //UserInfoResponse - user info response
 type UserInfoResponse struct {
-	UserSerialID	int 	`json:"user_serial_id"`
+	UserSerialID	string 	`json:"user_serial_id"`
 	IsActive		bool	`json:"is_active"`
 }
 

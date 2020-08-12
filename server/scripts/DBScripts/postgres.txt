@@ -52,3 +52,11 @@ inside psql prompt
 https://stackoverflow.com/questions/7695962/postgresql-password-authentication-failed-for-user-postgres
 
 -----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+**************** Adding uuid extension ***************
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+check by listing functions - \df
+******************************************************

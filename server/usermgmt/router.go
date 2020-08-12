@@ -12,13 +12,13 @@ import(
 
 //Router - user management router object
 type Router struct {
-	router 		router.Wrapper
+	router 		*router.MuxWrapper
 	modelDB 	*sql.DB
 }
 
 
 //Init - Init user management router
-func (u *Router)Init(r router.Wrapper, db *sql.DB) error{
+func (u *Router)Init(r *router.MuxWrapper, db *sql.DB) error{
 	if r == nil{
 		return errors.New("router wrapper object can not be nil")
 	}
@@ -251,6 +251,6 @@ func (u *Router)GetUserInfoHandler(w http.ResponseWriter, r* http.Request){
 		return
 	}
 
-	userInfo := UserInfoResponse{IsActive : user.IsActive, UserSerialID : user.UserID}
+	userInfo := UserInfoResponse{IsActive : user.IsActive, UserSerialID : user.UserID.String()}
 	u.respondWithJSON(w, http.StatusOK, userInfo)
 }

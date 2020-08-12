@@ -3,11 +3,12 @@ package usermgmt
 
 import (
 	"database/sql"
+	"github.com/google/uuid"
 )
 
 //User - business object to represent database la_user object
 type User struct{
-	UserID			int 	
+	UserID			uuid.UUID 	
 	EmailID 		string	
 	PasswordHash 	string	
 	PasswordSalt 	string	
