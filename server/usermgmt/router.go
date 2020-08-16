@@ -47,26 +47,14 @@ func (u *Router)Init(r *router.MuxWrapper, db *sql.DB) error{
 }
 
 
-func (u *Router)respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-    response, _ := json.Marshal(payload)
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(code)
-    w.Write(response)
-}
-
-func (u *Router)respondWithError(w http.ResponseWriter, code int, message string) {
-    u.respondWithJSON(w, code, map[string]string{"error": message})
-}
-
-
 func (u *Router)createLoginToken(userObj User) (LogInResponse, error){
 	// Declare the expiration time of the token
 	expirationTime := time.Now().Add(time.Duration(utils.LoginTokenExpiryTimeInMins) * time.Minute)
 	
 	//Create jwt token on login
-	tokenString, err :=  CreateJWTForUserLogin(userObj, expirationTime)
+	tokenString, err :=  utils.CreateJWTForUserLogin(userObj.EmailID, expirationTime)
 	if err != nil {
-		// u.respondWithError(w, http.StatusInternalServerError, "login error: " + err.Error())
+		// utils.RespondWithError(w, http.StatusInternalServerError, "login error: " + err.Error())
 		return LogInResponse{}, err
 	}
 	loginResponse := LogInResponse{Token:tokenString, Expiry:expirationTime.String()}
@@ -79,7 +67,7 @@ func (u *Router)RegisterUserHandler(w http.ResponseWriter, r* http.Request){
 	var registerRequestObj RegisterRequest
 	err  := json.NewDecoder(r.Body).Decode(&registerRequestObj)
 	if err != nil || registerRequestObj.UserID == "" || registerRequestObj.Password == ""{
-		u.respondWithError(w, http.StatusBadRequest, "invalid register json request")
+		utils.RespondWithError(w, http.StatusBadRequest, "invalid register json request")
 		return
 	}
 
@@ -91,7 +79,7 @@ func (u *Router)RegisterUserHandler(w http.ResponseWriter, r* http.Request){
 		//Create a random salt and password hash store it in same user database
 		user.PasswordHash, err = utils.HashPassword(registerRequestObj.Password)
 		if err != nil{
-			u.respondWithError(w, http.StatusInternalServerError, "error processing password")
+			utils.RespondWithError(w, http.StatusInternalServerError, "error processing password")
 			return
 		}
 
@@ -100,7 +88,7 @@ func (u *Router)RegisterUserHandler(w http.ResponseWriter, r* http.Request){
 		user.ActivationCode = utils.GenerateRandomNumber(6)	//6 digit code
 		err = user.CreateUser(u.modelDB)
 		if err != nil{
-			u.respondWithError(w, http.StatusInternalServerError, "error creating user")
+			utils.RespondWithError(w, http.StatusInternalServerError, "error creating user")
 			return
 		}
 
@@ -108,17 +96,17 @@ func (u *Router)RegisterUserHandler(w http.ResponseWriter, r* http.Request){
 		//TODO: send email
 
 		resp := RegisterResponse{Status : "awaiting verification"}
-		u.respondWithJSON(w, http.StatusOK, resp)
+		utils.RespondWithJSON(w, http.StatusOK, resp)
 		return
 	} else if (err != nil){
-		u.respondWithError(w, http.StatusInternalServerError, "internal error " + err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, "internal error " + err.Error())
 		return
 	} 
 	//else error is nil - user already exists
 	//if is_active or is_verified is true simply ignore the request
 	if(user.IsActive == true){
 		resp := RegisterResponse{Status : "user already registered"}
-		u.respondWithJSON(w, http.StatusCreated, resp)
+		utils.RespondWithJSON(w, http.StatusCreated, resp)
 		return
 	}
 
@@ -126,7 +114,7 @@ func (u *Router)RegisterUserHandler(w http.ResponseWriter, r* http.Request){
 	//TODO: send email
 
 	resp := RegisterResponse{Status : "awaiting verification"}
-	u.respondWithJSON(w, http.StatusOK, resp)
+	utils.RespondWithJSON(w, http.StatusOK, resp)
 
 	return
 	
@@ -138,7 +126,7 @@ func (u *Router)ActivateUserHandler(w http.ResponseWriter,r *http.Request){
 	var activationRequest UserActivationRequest
 	err := json.NewDecoder(r.Body).Decode(&activationRequest)
 	if err != nil || activationRequest.UserID == "" || activationRequest.ActivationCode == ""{
-		u.respondWithError(w, http.StatusBadRequest, "invalid activation request")
+		utils.RespondWithError(w, http.StatusBadRequest, "invalid activation request")
 		return
 	}
 	
@@ -146,10 +134,10 @@ func (u *Router)ActivateUserHandler(w http.ResponseWriter,r *http.Request){
 	err = user.GetUser(u.modelDB)
 	if(err != nil){	//user doesnt exist
 		if err == sql.ErrNoRows{
-			u.respondWithError(w, http.StatusNotFound, "activation error : user not found")
+			utils.RespondWithError(w, http.StatusNotFound, "activation error : user not found")
 			return
 		}
-		u.respondWithError(w, http.StatusInternalServerError, "activation error : " + err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, "activation error : " + err.Error())
 		return
 	}
 
@@ -159,19 +147,19 @@ func (u *Router)ActivateUserHandler(w http.ResponseWriter,r *http.Request){
 		user.IsActive = true
 		err = user.UpdateUser(u.modelDB)
 		if(err != nil) {	
-			u.respondWithError(w, http.StatusInternalServerError, "activation error while update " + err.Error())
+			utils.RespondWithError(w, http.StatusInternalServerError, "activation error while update " + err.Error())
 			return
 		}
 		//create a jwt and pass it
 		loginResponse, err := u.createLoginToken(user)
 		if err != nil {
-			u.respondWithError(w, http.StatusInternalServerError, "login error: " + err.Error())
+			utils.RespondWithError(w, http.StatusInternalServerError, "login error: " + err.Error())
 			return
 		}
-		u.respondWithJSON(w, http.StatusOK, loginResponse)
+		utils.RespondWithJSON(w, http.StatusOK, loginResponse)
 		return
 	}
-	u.respondWithError(w, http.StatusUnauthorized, "invalid activation code")
+	utils.RespondWithError(w, http.StatusUnauthorized, "invalid activation code")
 	return
 }
 
@@ -182,7 +170,7 @@ func (u * Router)UserLoginHandler(w http.ResponseWriter, r *http.Request){
 	var loginRequest LogInRequest
 	err := json.NewDecoder(r.Body).Decode(&loginRequest)
 	if err != nil || loginRequest.UserID == "" || loginRequest.Password == ""{
-		u.respondWithError(w, http.StatusBadRequest, "invalid login request")
+		utils.RespondWithError(w, http.StatusBadRequest, "invalid login request")
 		return
 	}
 
@@ -191,16 +179,16 @@ func (u * Router)UserLoginHandler(w http.ResponseWriter, r *http.Request){
 	err = userObj.GetUser(u.modelDB)
 	if err != nil {
 		if err == sql.ErrNoRows{
-			u.respondWithError(w, http.StatusNotFound, "user not found")
+			utils.RespondWithError(w, http.StatusNotFound, "user not found")
 			return
 		}
-		u.respondWithError(w, http.StatusInternalServerError, "unexpected error while fetching user - login")
+		utils.RespondWithError(w, http.StatusInternalServerError, "unexpected error while fetching user - login")
 		return
 	} 
 
 	//Check if user activation is already done
 	if userObj.IsActive == false{
-		u.respondWithError(w, http.StatusForbidden, "user activation required")
+		utils.RespondWithError(w, http.StatusForbidden, "user activation required")
 		return
 	}
 
@@ -208,18 +196,18 @@ func (u * Router)UserLoginHandler(w http.ResponseWriter, r *http.Request){
 	passwordsMatch, err := utils.ComparePasswords(userObj.PasswordHash, loginRequest.Password)
 	if passwordsMatch == false{
 		if err != nil {
-			u.respondWithError(w, http.StatusUnauthorized, "passwords do not match")
+			utils.RespondWithError(w, http.StatusUnauthorized, "passwords do not match")
 			return
 		}
-		u.respondWithError(w, http.StatusUnauthorized, "invalid password")
+		utils.RespondWithError(w, http.StatusUnauthorized, "invalid password")
 		return
 	}
 	loginResponse, err := u.createLoginToken(userObj)
 	if err != nil {
-		u.respondWithError(w, http.StatusInternalServerError, "login error: " + err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, "login error: " + err.Error())
 		return
 	}
-	u.respondWithJSON(w, http.StatusOK, loginResponse)
+	utils.RespondWithJSON(w, http.StatusOK, loginResponse)
 	return
 }
 
@@ -229,14 +217,14 @@ func (u *Router)GetUserInfoHandler(w http.ResponseWriter, r* http.Request){
 	var userInfoRequest UserInfoRequest
 	err := json.NewDecoder(r.Body).Decode(&userInfoRequest)
 	if err != nil {
-		u.respondWithError(w, http.StatusBadRequest, "get user error :" + err.Error())
+		utils.RespondWithError(w, http.StatusBadRequest, "get user error :" + err.Error())
 		return
 	}
 
 	//Validate JSON web token
-	tokenValidationStatus := ValidateJWTToken(userInfoRequest.TokenString)
+	tokenValidationStatus := utils.ValidateJWTToken(userInfoRequest.TokenString)
 	if tokenValidationStatus != http.StatusOK{
-		u.respondWithError(w, tokenValidationStatus, "invalid token")
+		utils.RespondWithError(w, tokenValidationStatus, "invalid token")
 		return
 	}
 
@@ -244,13 +232,13 @@ func (u *Router)GetUserInfoHandler(w http.ResponseWriter, r* http.Request){
 	err = user.GetUser(u.modelDB)
 	if(err != nil){
 		if (err == sql.ErrNoRows){
-			u.respondWithError(w, http.StatusNotFound, "user not found")
+			utils.RespondWithError(w, http.StatusNotFound, "user not found")
 			return
 		}
-		u.respondWithError(w, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	userInfo := UserInfoResponse{IsActive : user.IsActive, UserSerialID : user.UserID.String()}
-	u.respondWithJSON(w, http.StatusOK, userInfo)
+	utils.RespondWithJSON(w, http.StatusOK, userInfo)
 }

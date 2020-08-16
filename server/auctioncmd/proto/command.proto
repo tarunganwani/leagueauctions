@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package auctioncmd;
+// option go_package = "github.com/leagueauctions/server";
+
+message AuctionCommand {
+    enum CmdType {
+        GET_PLAYER_INFO = 0;
+        UPDATE_PLAYER_INFO = 1;
+    }
+    CmdType cmd_type = 1;
+    oneof command {
+        GetPlayerInfoCommand get_player_info_cmd = 2;
+        UpdatePlayerInfoCommand update_player_info_cmd = 3;
+    }
+}
+
+
+message AuctionResponse {
+    enum ResponseType {
+        GET_PLAYER_INFO = 0;
+        UPDATE_PLAYER_INFO = 1;
+    }
+    ResponseType response_type = 1;
+    oneof response {
+        GetPlayerInfoResponse get_player_info_response = 2;
+        UpdatePlayerInfoResponse update_player_info_response = 3;
+    }
+}
+
+// ********************* Player profile commands ********************* 
+enum PlayerType {
+    NONE = 0;
+    RIGHT_HANDED_BAT = 1;
+    LEFT_HANDED_BAT = 2;
+    RIGHT_ARM_BOWL = 3;
+    LEFT_ARM_BOWL = 4;
+    BATTING_ALL_ROUNDER = 5;
+    BOWLING_ALL_ROUNDER = 6;
+}
+
+message GetPlayerInfoCommand {
+    string user_uuid = 1;
+}
+
+message GetPlayerInfoResponse {
+    string player_name = 1;
+    string player_bio = 2;
+    string player_profile_link = 3;
+    PlayerType player_type = 4;
+    bytes player_picture = 5;
+    bool is_player_active = 6;
+}
+
+
+message UpdatePlayerInfoCommand {
+    string user_uuid = 1;
+    string player_name = 2;
+    string player_bio = 3;
+    string player_profile_link = 4;
+    PlayerType player_type = 5;
+    bytes player_picture = 6;
+    bool is_player_active = 7;
+}
+
+message UpdatePlayerInfoResponse {
+    bool update_success = 1;
+}

@@ -13,7 +13,7 @@ import(
 )
 
 //HTTPMethodsMap - global map of http methods
-var HTTPMethodsMap = map[string]interface{} {"GET":nil, "PUT":nil, "POST":nil, "DELETE":nil}
+var HTTPMethodsMap = map[string]interface{} {"GET":nil, "PUT":nil, "POST":nil, "DELETE":nil, "":nil,}
 
 //IsValidHTTPMethod - checks whether method is in the valid set of methods
 func IsValidHTTPMethod(methodname string) bool{
@@ -63,6 +63,7 @@ func (m *MuxWrapper)HandleRoute (route string, httpmethod string,
 								handler func (w http.ResponseWriter, r *http.Request)) error{
 	
 	// fmt.Println("Setting handler for route ", route)
+	// fmt.Println("m ", m)
 	// fmt.Println("m.router ", m.router)
 
 	if m.router == nil {
@@ -75,7 +76,13 @@ func (m *MuxWrapper)HandleRoute (route string, httpmethod string,
 	if (err != nil){
 		return err
 	}
-	m.router.HandleFunc(muxRoute, handler).Methods(httpmethod)
+
+	if httpmethod != ""{
+		m.router.HandleFunc(muxRoute, handler).Methods(httpmethod)
+	} else {
+		//for cases like websocket upgrade
+		m.router.HandleFunc(muxRoute, handler)
+	}
 	return nil
 }
 //FetchRequestVar - fetch value of variable from mux vars
