@@ -17,7 +17,30 @@ func (cr *connectionReader)Init() {
 	cr.cmdProcessor = new(CommandProcessor)
 }
 
-//TODO: add error handling logs  and tests
+//TODO create custom logger - add connection id/uuid in every log for unique identifier
+//TODO create logging levels, need not be too verbose
+func (cr *connectionReader)SendErrorMsg(errmsg string, conn *websocket.Conn) {
+	
+	errResponse  := &pb.AuctionResponse{Errormsg : errmsg}
+	log.Println("Marshalling error response", errmsg)
+	responseBytes, protoErr := proto.Marshal(errResponse)
+	if protoErr != nil{
+		//log marshalling error
+		log.Println("Listen marshalling error:", protoErr)
+		return
+	}
+	log.Println("Sending error response over the wire:", string(responseBytes))
+	if err := conn.WriteMessage(websocket.BinaryMessage, responseBytes); err != nil{
+		log.Println("Listen write response error:", err)
+		return
+	}
+	log.Println("Error sent")
+}
+
+//TODO  have a separate error handler struct for handling connection errors(logging plus sending)
+//		some refactoring for a cleaner implementation
+//		maybe exit loop after few repetitions of specific errors
+
 func (cr *connectionReader)Listen(userid string, conn *websocket.Conn) {
 	log.Println(userid + " listening... ")
 	for {
@@ -25,31 +48,42 @@ func (cr *connectionReader)Listen(userid string, conn *websocket.Conn) {
 		messageType, msg, err := conn.ReadMessage()
 		if err != nil {
 			//log the error
+			log.Println("Listen Read error:", err)
 			return
 		}
 		if (messageType == websocket.BinaryMessage){
 			auctioncmd  := &pb.AuctionCommand{}
-			if err := proto.Unmarshal(msg, auctioncmd); err != nil{
+			if err := proto.Unmarshal(msg, auctioncmd); err == nil{
+				log.Println("Listen ", userid, " Process auction command..")
 				cmdResponse, cmdErr := cr.cmdProcessor.ProcessAuctionCmd(auctioncmd)
 				if cmdErr != nil{
-					//log error - may be an invalid command as well
+					log.Println("Listen command processing error:", cmdErr)
+					cr.SendErrorMsg(cmdErr.Error(), conn)
 					continue
 				}
+				log.Println("Listen ", userid, "Marshalling repsonse..")
 				responseBytes, protoErr := proto.Marshal(cmdResponse)
 				if protoErr != nil{
 					//log marshalling error
+					log.Println("Listen marshalling error:", protoErr)
 					continue
 				}
+				log.Println("Listen ", userid, " Writing repsonse")
 				if err := conn.WriteMessage(websocket.BinaryMessage, responseBytes); err != nil{
-					//log.Println("send msg error", err)
+					log.Println("Listen write response error:", err)
 					continue
 				}
-
+				log.Println("Listen ", userid, "Response successfully sent")
 			} else{
-				//log parsing error and continue???
+				log.Println("Listen unmarshal error:", err)
+				cr.SendErrorMsg(err.Error(), conn)
+				continue
 			}
 		} else{
 			// log.Println("User ", userid, "Invalid message type")
+			log.Println("Listen error: Invalid message type : user ", userid)
+			cr.SendErrorMsg(err.Error(), conn)
+			continue
 		}
 
 	}

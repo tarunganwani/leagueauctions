@@ -6,17 +6,23 @@ import (
 	"net/http/httptest"
 	"testing"
 	"bytes"
-	"strings"
+	"time"
+	// "strings"
 	// "fmt"
+	"log"
 	_ "github.com/lib/pq"
 	"github.com/leagueauctions/server/usermgmt"
+	"github.com/leagueauctions/server/auctionctl"
 	"github.com/leagueauctions/server/libs/router"
 	"github.com/leagueauctions/server/utils"
+    "github.com/gorilla/websocket"
+	pb "github.com/leagueauctions/server/auctioncmd" 
+	"github.com/golang/protobuf/proto"
 )
 
 
 
-func initDBAndRouter(t *testing.T) *router.MuxWrapper{
+func initDBAndRouter(t *testing.T) (*router.MuxWrapper, *usermgmt.Router, *auctionctl.Router){
 	db, err := utils.OpenPostgreDatabase("postgres", "postgres", "leagueauction")
 	if err != nil{
 		t.Fatal(err)
@@ -49,7 +55,17 @@ func initDBAndRouter(t *testing.T) *router.MuxWrapper{
 	if (err != nil){
 		t.Fatal(err)
 	}
-	return r
+
+	// initialize user connection pool
+	userConnPool := new(auctionctl.UserConnectionPool)
+	userConnPool.Init()
+
+	auctionCtlRouter := new(auctionctl.Router)
+	err = auctionCtlRouter.Init(r, db, userConnPool)
+	if (err != nil){
+		t.Fatal(err)
+	}
+	return r, usrMgmtRouter, auctionCtlRouter
 }
 
 func executeRequest(r *router.MuxWrapper, req *http.Request) *httptest.ResponseRecorder {
@@ -58,51 +74,11 @@ func executeRequest(r *router.MuxWrapper, req *http.Request) *httptest.ResponseR
     return rr
 }
 
-func leagueauctionwsconnect(w http.ResponseWriter, r *http.Request) {
 
-    user, ok := r.URL.Query()["user"]
-    if !ok || len(user[0]) < 1 {
-        w.WriteHeader(http.StatusBadRequest)
-        w.Write([]byte("invalid user"))
-        return
-    }
 
-    log.Println("opening websocket for user " + user[0])
-    c, err := upgrader.Upgrade(w, r, nil)
-    if err != nil {
-        w.WriteHeader(http.StatusInternalServerError)
-        w.Write([]byte("websocket upgrade error"))
-        return
-    }
-    // w.WriteHeader(http.StatusOK) // response.WriteHeader on hijacked connection
-    defer c.Close()
-}
+func TestWsConnectionWithSampleCommand(t *testing.T){
 
-func DialWebSocket(handlerFunc func(w http.ResponseWriter, r *http.Request), uuid string) (*websocket.Conn, *http.Response, error){
-
-        // Create test server with the echo handler.
-    s := httptest.NewServer(http.HandlerFunc(handlerFunc))
-    defer s.Close()
-
-    // Convert http://127.0.0.1 to ws://127.0.0.1
-    u := "ws://localhost:8080/connect"
-
-    // Connect to the server
-    return websocket.DefaultDialer.Dial(u, nil)
-}
-
-func TestLeagueAuctionWsConnect(t *testing.T) {
-
-    ws, _, err := DialWebSocket(leagueauctionwsconnect, "uuid1")
-    if err != nil {
-        t.Fatalf("server :: %v", err)
-    }
-    defer ws.Close()
-
-}
-func TestRegisterActivationLoginExistingUser(t *testing.T){
-
-	r := initDBAndRouter(t)
+	r, _, auctionRouter := initDBAndRouter(t)
 	
 	// var RegistrationJSONReqStr = []byte(`{"user_id":"x@x.com", "user_password": "pwd123"}`)
 	// req, _ := http.NewRequest("POST", "/user/register", bytes.NewBuffer(RegistrationJSONReqStr))
@@ -132,19 +108,104 @@ func TestRegisterActivationLoginExistingUser(t *testing.T){
 	// }
 
 	//assume x@x.com/pwd123 is already a valid account
-	var loginJSONRequest = []byte(`{"user_id":"x@x.com", "user_password": "pwd123"}`)
+	userid := "x@x.com"
+	pwdstr := "pwd123"
+	jsonRequest := "{\"user_id\": \"" + userid +"\", \"user_password\": \""+pwdstr+"\"}"
+	log.Println("jsonRequest ", jsonRequest)
+	var loginJSONRequest = []byte(jsonRequest)
 	req, _ := http.NewRequest("POST", "/user/login", bytes.NewBuffer(loginJSONRequest))
 	response := executeRequest(r, req)
 	if response.Code != http.StatusOK {
 		var m map[string]string
 		json.Unmarshal(response.Body.Bytes(), &m)
-		t.Error("Actual code ", response.Code)
-		t.Fatal("Actual error ", m["error"])
+		t.Error("CLIENT:: Actual code ", response.Code)
+		t.Fatal("CLIENT:: Actual error ", m["error"])
 	}
 	var loginResponse usermgmt.LogInResponse
 	json.Unmarshal(response.Body.Bytes(), &loginResponse)
 	if loginResponse.Token == "" || loginResponse.Expiry == ""{
-		t.Fatal("Expected valid login response. Actual: ", loginResponse)
+		t.Fatal("CLIENT:: Expected valid login response. Actual: ", loginResponse)
 	}
 
+
+	//set up server to serve ws request
+	h := http.HandlerFunc(auctionRouter.UpgradeToWsHandler)
+	s := httptest.NewServer(h)
+	defer s.Close()
+
+	connectWsURL := "ws://" + s.Listener.Addr().String() + "/connect?user=" + userid + ";token=" + loginResponse.Token
+	// connectWsURL := "ws://localhost:8080/connect?user=" + userid + ";token=" + loginResponse.Token
+	conn, resp, err := websocket.DefaultDialer.Dial(connectWsURL, nil)
+	if err != nil{
+		t.Fatal("CLIENT:: ", err.Error())
+	}
+	if conn == nil{
+		t.Fatal("CLIENT:: Expected non nil connection object")
+	}
+	if resp == nil{
+		t.Fatal("CLIENT:: Expected non nil response object")
+	}
+	if got, want := resp.StatusCode, http.StatusSwitchingProtocols; got != want {
+		t.Errorf("CLIENT:: resp.StatusCode = %q, want %q", got, want)
+	}
+
+	playerinfoRequest := pb.GetPlayerInfoCommand{}
+	playerinfoRequest.UserUuid = "x@x.com"	//TODO replace by user uuid
+
+	auctionCmdRequest := pb.AuctionCommand{}
+	auctionCmdRequest.CmdType = pb.AuctionCommand_GET_PLAYER_INFO
+	auctionCmdRequest.Command = &pb.AuctionCommand_GetPlayerInfoCmd{ GetPlayerInfoCmd : &playerinfoRequest }
+
+	respChan := make(chan []byte)
+	errChan := make(chan string)
+
+	defer func(){
+		close(respChan)
+		close(errChan)
+	}()
+
+    go func(){
+        for{
+            msgtype, message, err :=  conn.ReadMessage()
+            if err != nil{
+				errChan <- "CLIENT:: Response error" + err.Error()
+                return
+			}
+			if msgtype != websocket.BinaryMessage{
+				errChan <- "CLIENT:: Invalid response type. Expected websocket.BinaryMessage(2) Got: " + string(msgtype)
+				return
+			}
+			respChan <- message
+			errChan <- ""
+			return
+        }   
+    }()
+
+
+	auctionCmdReqBytes, _ := proto.Marshal(&auctionCmdRequest)
+	err = conn.WriteMessage(websocket.BinaryMessage, auctionCmdReqBytes)
+
+	if err != nil{
+		t.Fatal(err)
+	}
+
+	select{
+	case errc := <-errChan:
+		t.Error(errc)
+	case auctionResponseBytes := <-respChan:
+
+		var auctionResp pb.AuctionResponse
+		err = proto.Unmarshal(auctionResponseBytes, &auctionResp)
+		if err != nil{
+			t.Error("CLIENT:: Error" + err.Error())
+		}
+		log.Println("CLIENT:: Auction response ", auctionResp.String())
+		if auctionResp.GetErrormsg() != ""{
+			t.Error("CLIENT:: Auction response error msg ", auctionResp.GetErrormsg())
+		}
+	case <-time.After(2 * time.Second):
+		t.Error("CLIENT:: reader Timed-out!")
+	}
+
+	// log.Println("CLIENT:: WS connection Response ", resp)
 }

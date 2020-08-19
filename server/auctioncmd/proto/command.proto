@@ -21,10 +21,11 @@ message AuctionResponse {
         GET_PLAYER_INFO = 0;
         UPDATE_PLAYER_INFO = 1;
     }
-    ResponseType response_type = 1;
+    string errormsg = 1;
+    ResponseType response_type = 2;
     oneof response {
-        GetPlayerInfoResponse get_player_info_response = 2;
-        UpdatePlayerInfoResponse update_player_info_response = 3;
+        GetPlayerInfoResponse get_player_info_response = 3;
+        UpdatePlayerInfoResponse update_player_info_response = 4;
     }
 }
 
