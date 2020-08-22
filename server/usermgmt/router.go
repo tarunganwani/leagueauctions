@@ -8,22 +8,23 @@ import(
 	"database/sql"
 	"github.com/leagueauctions/server/libs/router"
 	"github.com/leagueauctions/server/utils"
+	"github.com/leagueauctions/server/database"
 )
 
 //Router - user management router object
 type Router struct {
 	router 		*router.MuxWrapper
-	modelDB 	*sql.DB
+	userstore 	database.UserStore
 }
 
 
 //Init - Init user management router
-func (u *Router)Init(r *router.MuxWrapper, db *sql.DB) error{
+func (u *Router)Init(r *router.MuxWrapper, userstore database.UserStore) error{
 	if r == nil{
 		return errors.New("router wrapper object can not be nil")
 	}
-	if db == nil{
-		return errors.New("database object can not be nil")
+	if userstore == nil{
+		return errors.New("userstore object can not be nil")
 	}
 	u.router = r
 	err := u.router.HandleRoute("/user/register", "POST", u.RegisterUserHandler)
@@ -42,12 +43,12 @@ func (u *Router)Init(r *router.MuxWrapper, db *sql.DB) error{
 	if err != nil{
 		return err
 	}
-	u.modelDB = db
+	u.userstore = userstore
 	return nil
 }
 
 
-func (u *Router)createLoginToken(userObj User) (LogInResponse, error){
+func (u *Router)createLoginToken(userObj database.User) (LogInResponse, error){
 	// Declare the expiration time of the token
 	expirationTime := time.Now().Add(time.Duration(utils.LoginTokenExpiryTimeInMins) * time.Minute)
 	
@@ -72,12 +73,12 @@ func (u *Router)RegisterUserHandler(w http.ResponseWriter, r* http.Request){
 	}
 
 	//check if user already exists
-	user := User{EmailID : registerRequestObj.UserID}
-	err = user.GetUser(u.modelDB)
+	dbuser, err := u.userstore.GetUserByEmailID(registerRequestObj.UserID)
 	if(err != nil && err == sql.ErrNoRows){	//new user (user doesnt exist) 
 
+		newuser := database.User{EmailID:registerRequestObj.UserID}
 		//Create a random salt and password hash store it in same user database
-		user.PasswordHash, err = utils.HashPassword(registerRequestObj.Password)
+		newuser.PasswordHash, err = utils.HashPassword(registerRequestObj.Password)
 		if err != nil{
 			utils.RespondWithError(w, http.StatusInternalServerError, "error processing password")
 			return
@@ -85,8 +86,8 @@ func (u *Router)RegisterUserHandler(w http.ResponseWriter, r* http.Request){
 
 		//Create a random activation code and store it in database
 		//TODO: can think of using an in-memory database in future for storing OTP information
-		user.ActivationCode = utils.GenerateRandomNumber(6)	//6 digit code
-		err = user.CreateUser(u.modelDB)
+		newuser.ActivationCode = utils.GenerateRandomNumber(6)	//6 digit code
+		err = u.userstore.CreateUser(&newuser)
 		if err != nil{
 			utils.RespondWithError(w, http.StatusInternalServerError, "error creating user")
 			return
@@ -104,7 +105,7 @@ func (u *Router)RegisterUserHandler(w http.ResponseWriter, r* http.Request){
 	} 
 	//else error is nil - user already exists
 	//if is_active or is_verified is true simply ignore the request
-	if(user.IsActive == true){
+	if(dbuser.IsActive == true){
 		resp := RegisterResponse{Status : "user already registered"}
 		utils.RespondWithJSON(w, http.StatusCreated, resp)
 		return
@@ -130,8 +131,9 @@ func (u *Router)ActivateUserHandler(w http.ResponseWriter,r *http.Request){
 		return
 	}
 	
-	user := User{EmailID: activationRequest.UserID}
-	err = user.GetUser(u.modelDB)
+	
+	dbuser, err := u.userstore.GetUserByEmailID(activationRequest.UserID)
+	// err = user.GetUser(u.modelDB)
 	if(err != nil){	//user doesnt exist
 		if err == sql.ErrNoRows{
 			utils.RespondWithError(w, http.StatusNotFound, "activation error : user not found")
@@ -144,14 +146,14 @@ func (u *Router)ActivateUserHandler(w http.ResponseWriter,r *http.Request){
 	if isActivationValid := ValidateActivationCode(activationRequest); isActivationValid{
 		
 		//Set is verified and is active to true
-		user.IsActive = true
-		err = user.UpdateUser(u.modelDB)
+		dbuser.IsActive = true
+		err = u.userstore.UpdateUser(dbuser)
 		if(err != nil) {	
 			utils.RespondWithError(w, http.StatusInternalServerError, "activation error while update " + err.Error())
 			return
 		}
 		//create a jwt and pass it
-		loginResponse, err := u.createLoginToken(user)
+		loginResponse, err := u.createLoginToken(*dbuser)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "login error: " + err.Error())
 			return
@@ -175,8 +177,8 @@ func (u * Router)UserLoginHandler(w http.ResponseWriter, r *http.Request){
 	}
 
 	//Fetch user from database
-	userObj := User{EmailID : loginRequest.UserID}
-	err = userObj.GetUser(u.modelDB)
+
+	dbuser, err := u.userstore.GetUserByEmailID(loginRequest.UserID)
 	if err != nil {
 		if err == sql.ErrNoRows{
 			utils.RespondWithError(w, http.StatusNotFound, "user not found")
@@ -187,13 +189,13 @@ func (u * Router)UserLoginHandler(w http.ResponseWriter, r *http.Request){
 	} 
 
 	//Check if user activation is already done
-	if userObj.IsActive == false{
+	if dbuser.IsActive == false{
 		utils.RespondWithError(w, http.StatusForbidden, "user activation required")
 		return
 	}
 
 	//validate Password
-	passwordsMatch, err := utils.ComparePasswords(userObj.PasswordHash, loginRequest.Password)
+	passwordsMatch, err := utils.ComparePasswords(dbuser.PasswordHash, loginRequest.Password)
 	if passwordsMatch == false{
 		if err != nil {
 			utils.RespondWithError(w, http.StatusUnauthorized, "passwords do not match")
@@ -202,7 +204,7 @@ func (u * Router)UserLoginHandler(w http.ResponseWriter, r *http.Request){
 		utils.RespondWithError(w, http.StatusUnauthorized, "invalid password")
 		return
 	}
-	loginResponse, err := u.createLoginToken(userObj)
+	loginResponse, err := u.createLoginToken(*dbuser)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "login error: " + err.Error())
 		return
@@ -228,8 +230,8 @@ func (u *Router)GetUserInfoHandler(w http.ResponseWriter, r* http.Request){
 		return
 	}
 
-	user := User{EmailID:userInfoRequest.UserID}
-	err = user.GetUser(u.modelDB)
+
+	dbuser, err := u.userstore.GetUserByEmailID(userInfoRequest.UserID)
 	if(err != nil){
 		if (err == sql.ErrNoRows){
 			utils.RespondWithError(w, http.StatusNotFound, "user not found")
@@ -239,6 +241,6 @@ func (u *Router)GetUserInfoHandler(w http.ResponseWriter, r* http.Request){
 		return
 	}
 
-	userInfo := UserInfoResponse{IsActive : user.IsActive, UserSerialID : user.UserID.String()}
+	userInfo := UserInfoResponse{IsActive : dbuser.IsActive, UserSerialID : dbuser.UserID.String()}
 	utils.RespondWithJSON(w, http.StatusOK, userInfo)
 }

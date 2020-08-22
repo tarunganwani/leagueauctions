@@ -8,7 +8,7 @@ create extension IF NOT EXISTS "uuid-ossp";
 
 create table IF NOT EXISTS la_schema.la_user (
 	user_id 	UUID 	DEFAULT uuid_generate_v4 () NOT NULL,
-	email_id	TEXT 	NOT NULL,
+	email_id	TEXT 	UNIQUE	NOT NULL,
 	password_hash	TEXT 	NOT NULL,
 	password_salt	TEXT 	NOT NULL,
 	activation_code	TEXT,

@@ -2,6 +2,7 @@ package test
 
 
 import (
+	"github.com/leagueauctions/server/database"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -11,19 +12,13 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/leagueauctions/server/usermgmt"
 	"github.com/leagueauctions/server/libs/router"
-	"github.com/leagueauctions/server/utils"
 )
 
 
 func initDBAndRouter(t *testing.T) *router.MuxWrapper{
-	db, err := utils.OpenPostgreDatabase("postgres", "postgres", "leagueauction")
-	if err != nil{
-		t.Fatal(err)
-	}
-	err = clearUserTable(t, db)
-	if (err != nil){
-		t.Fatal(err)
-	}
+
+	//use mock database
+	mockUserstore := database.GetMockUserStore()
 
 	var r *router.MuxWrapper = new(router.MuxWrapper)
 	routerCfg := router.Config{
@@ -33,13 +28,13 @@ func initDBAndRouter(t *testing.T) *router.MuxWrapper{
 		CertFilePath : "../../certs/cert.pem",
 		KeyPath : "../../certs/key.pem",
 	}
-	err = r.Init(routerCfg)
+	err := r.Init(routerCfg)
 	if (err != nil){
 		t.Fatal(err)
 	}
 
 	usrMgmtRouter := new(usermgmt.Router)
-	err = usrMgmtRouter.Init(r, db)
+	err = usrMgmtRouter.Init(r, mockUserstore)
 	if (err != nil){
 		t.Fatal(err)
 	}
@@ -252,5 +247,3 @@ func TestErrorRequests(t *testing.T){
 //TODO: create testing stub for activation code
 //probably a functor for creating and verifying user activation code
 //also another functor for creating and using JWT could prove handy
-
-//TODO: check if mocking the db is an easy option for router test, right now router testing is too heavy
