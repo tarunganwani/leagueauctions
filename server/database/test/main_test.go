@@ -30,13 +30,18 @@ func setupProfileStore(db *sql.DB) {
 	playerstoresMap[mockStoreName] = database.GetPlayerMockStore()
 }
 
+func cleanup(db *sql.DB) {
+	db.Exec("DELETE FROM la_schema.la_user WHERE email_id like '%$$$$'")
+	db.Exec("DELETE FROM la_schema.la_player WHERE player_name like '%$$$$'")
+}
+
 func setup() (*sql.DB, error){
 
 	db, err := utils.OpenPostgreDatabase("postgres", "postgres", "leagueauction")
 	if err != nil{
 		return nil, err
 	}
-
+	cleanup(db)
 	setupUserStore(db)
 	setupProfileStore(db)
 	
@@ -44,8 +49,7 @@ func setup() (*sql.DB, error){
 }
 
 func teardown(db *sql.DB){
-	db.Exec("DELETE FROM la_schema.la_user WHERE email_id like '%$$$$'")
-	db.Exec("DELETE FROM la_schema.la_player WHERE player_name like '%$$$$'")
+	cleanup(db)
 }
 
 //TestMain - run all tests in this package

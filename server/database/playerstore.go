@@ -44,8 +44,8 @@ type playerStoreDbImpl struct{
 const (
 	selectUserPlayerMappingByUserUUIDQuery = "SELECT player_id FROM la_schema.la_user_player_map WHERE user_id = $1"
 	fetchPlayerInfoByPlayerUUIDQuery = "SELECT player_name, player_bio, player_profile_link, player_type, player_photo, is_active FROM la_schema.la_player WHERE player_id = $1"
-	upsertPlayerInfo = `INSERT INTO la_schema.la_player (player_name, player_bio, player_profile_link, player_type, player_photo, is_active) 
-						VALUES($1, $2, $3, $4, $5, $6)
+	upsertPlayerInfo = `INSERT INTO la_schema.la_player (player_id, player_name, player_bio, player_profile_link, player_type, player_photo, is_active) 
+						VALUES($1, $2, $3, $4, $5, $6, $7)
 						ON CONFLICT (player_id)
 						DO UPDATE
 						SET player_name = EXCLUDED.player_name,
@@ -81,11 +81,20 @@ func (ps *playerStoreDbImpl)GetPlayerByUserUUID(userUUID uuid.UUID) (*Player, er
 
 func (ps *playerStoreDbImpl)UpdatePlayerInfoForUser(player *Player, userUUID uuid.UUID) error{
 	if ps.db == nil {
-		return errors.New("database object con not be nil")
+		return errors.New("database object can not be nil")
 	}
-	err := ps.db.QueryRow(upsertPlayerInfo, player.PlayerName, player.PlayerBio, 
+	if player == nil {
+		return errors.New("player object can not be nil")
+	}
+	_, err := ps.GetPlayerByUserUUID(userUUID)
+	if err != nil && err == sql.ErrNoRows{
+		player.PlayerID = uuid.New()
+	} else if err != nil{
+		return err
+	}
+	_, err = ps.db.Exec(upsertPlayerInfo, player.PlayerID, player.PlayerName, player.PlayerBio, 
 						player.PlayerProfileLink, player.PlayerType,
-						player.PlayerPicture, player.IsActive).Scan(&player.PlayerID)
+						player.PlayerPicture, player.IsActive)
 	if err != nil{
 		return err
 	}

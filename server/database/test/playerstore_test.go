@@ -36,7 +36,22 @@ func TestCreateAndGetExisitingPlayers(t *testing.T) {
 		if (err != nil) {
 			t.Fatal("Player creation failed err:", err)
 		}
+		plyr1.PlayerPicture = []uint8{}	// default value gotten from database
 		plyrGot, err := playerstore.GetPlayerByUserUUID(usr1.UserID)
+		if (err != nil) {
+			t.Fatal("Player FETCH failed err:", err)
+		}
+		if reflect.DeepEqual(*plyrGot, *plyr1) == false{
+			t.Fatalf("Player FETCH failed\nexpected  = %#v\nactual = %#v\n", *plyr1, *plyrGot)
+		}
+
+		//Test update
+		plyr1.PlayerBio = "PLAYER1-BIO"
+		err = playerstore.UpdatePlayerInfoForUser(plyr1, usr1.UserID)
+		if (err != nil) {
+			t.Fatal("Player creation failed err:", err)
+		}
+		plyrGot, err = playerstore.GetPlayerByUserUUID(usr1.UserID)
 		if (err != nil) {
 			t.Fatal("Player FETCH failed err:", err)
 		}
