@@ -31,10 +31,13 @@ create table IF NOT EXISTS la_schema.la_player (
 	PRIMARY KEY(player_id)
 );
 
+create index IDX_PLAYER_ID on
+la_schema.la_player(player_id);
+
 create table IF NOT EXISTS la_schema.la_user_player_map (
 	map_id		UUID 	DEFAULT uuid_generate_v4 () 	NOT NULL,
-	user_id		UUID,
-	player_id	UUID,
+	user_id		UUID	UNIQUE,
+	player_id	UUID	UNIQUE,
 	PRIMARY KEY(map_id),
 	FOREIGN KEY(user_id)	REFERENCES la_schema.la_user(user_id) ON DELETE CASCADE,
 	FOREIGN KEY(player_id)	REFERENCES la_schema.la_player(player_id) ON DELETE CASCADE

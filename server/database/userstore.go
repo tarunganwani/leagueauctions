@@ -92,6 +92,10 @@ func GetMockUserStore() UserStore{
 }
 
 
+
+
+// ************************** MockStore **************************
+
 //userStoreMockImpl - User db store
 type userStoreMockImpl struct{
 	userarray []User
@@ -116,6 +120,7 @@ func (us *userStoreMockImpl)CreateUser(u *User) error{
 	if err == nil{	//User found
 		return errors.New("User already exists")
 	}
+	u.UserID = uuid.New()
 	us.userarray = append(us.userarray, *u)
 	return nil
 }

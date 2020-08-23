@@ -10,24 +10,42 @@ import (
 	"database/sql"
 )
 
+const (
+	dbStoreName = "db-store"
+	mockStoreName = "mock-store"
+)
+
 var userstoresMap map[string]database.UserStore
+var playerstoresMap map[string]database.PlayerStore
+
+func setupUserStore(db *sql.DB) {
+	userstoresMap = make(map[string]database.UserStore)
+	userstoresMap[dbStoreName] = database.GetUserDBStore(db)
+	userstoresMap[mockStoreName] = database.GetMockUserStore()
+}
+
+func setupProfileStore(db *sql.DB) {
+	playerstoresMap = make(map[string]database.PlayerStore)
+	playerstoresMap[dbStoreName] = database.GetPlayerDBStore(db)
+	playerstoresMap[mockStoreName] = database.GetPlayerMockStore()
+}
 
 func setup() (*sql.DB, error){
 
-	userstoresMap = make(map[string]database.UserStore)
-
-	userstoresMap["mock-userstore"] = database.GetMockUserStore()
-	
 	db, err := utils.OpenPostgreDatabase("postgres", "postgres", "leagueauction")
 	if err != nil{
 		return nil, err
 	}
-	userstoresMap["db-userstore"] = database.GetUserDBStore(db)
+
+	setupUserStore(db)
+	setupProfileStore(db)
+	
 	return db, nil
 }
 
 func teardown(db *sql.DB){
 	db.Exec("DELETE FROM la_schema.la_user WHERE email_id like '%$$$$'")
+	db.Exec("DELETE FROM la_schema.la_player WHERE player_name like '%$$$$'")
 }
 
 //TestMain - run all tests in this package
