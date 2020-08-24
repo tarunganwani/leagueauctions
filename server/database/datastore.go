@@ -6,12 +6,8 @@ import (
 )
 //LeagueAuctionDatastore - database store to hold references to all databases
 type LeagueAuctionDatastore struct{
-	userstore UserStore
-}
-
-//GetUserstore - get user store
-func (lads * LeagueAuctionDatastore)GetUserstore() UserStore{
-	return lads.userstore
+	LAUserstore 	UserStore
+	LAPlayerStore 	PlayerStore
 }
 
 
@@ -21,7 +17,16 @@ func GetLeagueAuctionDatastore(dbObject *sql.DB) (*LeagueAuctionDatastore, error
 		return nil, errors.New("db object nil")
 	}
 	ds := new(LeagueAuctionDatastore)
-	ds.userstore = GetUserDBStore(dbObject)
+	ds.LAUserstore 		= GetUserDBStore(dbObject)
+	ds.LAPlayerStore 	= GetPlayerDBStore(dbObject)
 	return ds, nil
 }
 
+
+//GetLeagueAuctionMockstore -- initializes and gets a new mock store
+func GetLeagueAuctionMockstore() (*LeagueAuctionDatastore, error){
+	ds := new(LeagueAuctionDatastore)
+	ds.LAUserstore 		= GetMockUserStore()
+	ds.LAPlayerStore 	= GetPlayerMockStore()
+	return ds, nil
+}

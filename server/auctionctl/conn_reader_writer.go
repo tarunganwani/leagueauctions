@@ -2,6 +2,7 @@ package auctionctl
 
 import (
 	"log"
+	"errors"
     "github.com/gorilla/websocket"
 	pb "github.com/leagueauctions/server/auctioncmd" 
 	"github.com/golang/protobuf/proto"
@@ -12,9 +13,7 @@ type connectionReader struct{
 }
 
 
-
 func (cr *connectionReader)Init() {
-	cr.cmdProcessor = new(CommandProcessor)
 }
 
 //TODO create custom logger - add connection id/uuid in every log for unique identifier
@@ -41,13 +40,19 @@ func (cr *connectionReader)SendErrorMsg(errmsg string, conn *websocket.Conn) {
 //		some refactoring for a cleaner implementation
 //		maybe exit loop after few repetitions of specific errors
 
-func (cr *connectionReader)Listen(userid string, conn *websocket.Conn) {
+func (cr *connectionReader)Listen(userid string, conn *websocket.Conn) (err error) {
 	log.Println(userid + " listening... ")
+	if cr.cmdProcessor == nil{
+		log.Println("command processor can not be nil")
+		err = errors.New("command processor can not be nil")
+		return 
+	}
 	for {
 		// read in a message
-		messageType, msg, err := conn.ReadMessage()
-		if err != nil {
+		messageType, msg,readErr := conn.ReadMessage()
+		if readErr != nil {
 			//log the error
+			err = readErr
 			log.Println("Listen Read error:", err)
 			return
 		}

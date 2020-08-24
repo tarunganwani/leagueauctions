@@ -10,6 +10,7 @@ type LogInRequest struct {
 type LogInResponse struct{
 	Token			string	`json:"login_token"`
 	Expiry			string	`json:"token_expiry"`
+	UserUUID		string	`json:"user_uuid"`
 }
 
 //RegisterRequest - user registration request

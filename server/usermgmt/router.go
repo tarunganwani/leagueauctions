@@ -48,7 +48,7 @@ func (u *Router)Init(r *router.MuxWrapper, userstore database.UserStore) error{
 }
 
 
-func (u *Router)createLoginToken(userObj database.User) (LogInResponse, error){
+func (u *Router)createLoginResponse(userObj database.User) (LogInResponse, error){
 	// Declare the expiration time of the token
 	expirationTime := time.Now().Add(time.Duration(utils.LoginTokenExpiryTimeInMins) * time.Minute)
 	
@@ -58,7 +58,7 @@ func (u *Router)createLoginToken(userObj database.User) (LogInResponse, error){
 		// utils.RespondWithError(w, http.StatusInternalServerError, "login error: " + err.Error())
 		return LogInResponse{}, err
 	}
-	loginResponse := LogInResponse{Token:tokenString, Expiry:expirationTime.String()}
+	loginResponse := LogInResponse{Token:tokenString, Expiry:expirationTime.String(), UserUUID : userObj.UserID.String()}
 	return loginResponse, nil
 }
 
@@ -153,7 +153,7 @@ func (u *Router)ActivateUserHandler(w http.ResponseWriter,r *http.Request){
 			return
 		}
 		//create a jwt and pass it
-		loginResponse, err := u.createLoginToken(*dbuser)
+		loginResponse, err := u.createLoginResponse(*dbuser)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "login error: " + err.Error())
 			return
@@ -204,7 +204,7 @@ func (u * Router)UserLoginHandler(w http.ResponseWriter, r *http.Request){
 		utils.RespondWithError(w, http.StatusUnauthorized, "invalid password")
 		return
 	}
-	loginResponse, err := u.createLoginToken(*dbuser)
+	loginResponse, err := u.createLoginResponse(*dbuser)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusInternalServerError, "login error: " + err.Error())
 		return

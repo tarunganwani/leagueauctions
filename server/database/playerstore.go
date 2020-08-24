@@ -12,7 +12,7 @@ type Player struct{
 	PlayerName			string	
 	PlayerBio	 		string	
 	PlayerProfileLink 	string	
-	PlayerType			string
+	PlayerType			int
 	PlayerPicture		[]byte
 	IsActive			bool
 }

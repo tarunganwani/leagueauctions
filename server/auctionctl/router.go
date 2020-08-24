@@ -4,29 +4,29 @@ import(
 	"log"
 	"net/http"
 	"errors"
-	"database/sql"
 	"github.com/leagueauctions/server/libs/router"
 	"github.com/leagueauctions/server/utils"
     "github.com/gorilla/websocket"
+	"github.com/leagueauctions/server/database"
 )
 
 //Router - user management router object
 type Router struct {
-	router 		*router.MuxWrapper
-	modelDB 	*sql.DB
-	upgrader 	*websocket.Upgrader
-	userConnPool *UserConnectionPool
+	router 			*router.MuxWrapper
+	auctionstore 	*database.LeagueAuctionDatastore
+	upgrader 		*websocket.Upgrader
+	userConnPool 	*UserConnectionPool
 }
 
 
 //Init - Init auctions router
-func (ar *Router)Init(r *router.MuxWrapper, db *sql.DB, conPool *UserConnectionPool) error{
+func (ar *Router)Init(r *router.MuxWrapper, laStore *database.LeagueAuctionDatastore, conPool *UserConnectionPool) error{
 
 	if r == nil{
 		return errors.New("router wrapper object can not be nil")
 	}
-	if db == nil{
-		return errors.New("database object can not be nil")
+	if laStore == nil{
+		return errors.New("laStore object can not be nil")
 	}
 	if conPool == nil{
 		return errors.New("connection pool object can not be nil")
@@ -41,7 +41,7 @@ func (ar *Router)Init(r *router.MuxWrapper, db *sql.DB, conPool *UserConnectionP
 	ar.upgrader.ReadBufferSize = 0	
 	ar.upgrader.WriteBufferSize = 0	
 
-	ar.modelDB = db
+	ar.auctionstore = laStore
 	ar.router = r
 	err := ar.router.HandleRoute("/connect", "", ar.UpgradeToWsHandler)
 	if err != nil{
@@ -96,7 +96,16 @@ func (ar *Router)UpgradeToWsHandler(w http.ResponseWriter, r* http.Request){
 	log.Println("user " + user[0] + " added to conenction pool")
 
 	//spawn reader and writer
-	cr := connectionReader{}
+
+	cmdProc := new(CommandProcessor)
+	err = cmdProc.init(ar.auctionstore)
+	if err != nil {
+		log.Println("command processor initialization error :", err.Error() )
+		utils.RespondWithErrorWS(w, "invalid access token")
+		return
+	}
+	cr := connectionReader{cmdProcessor : cmdProc}
 	log.Println("user " + user[0] + " listening.. ")
-	cr.Listen(user[0], con)	//TODO consider making user id and conenction class attribute 
+	//TODO consider making user id and conenction class attribute 
+	cr.Listen(user[0], con)	
 }

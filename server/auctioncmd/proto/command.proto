@@ -5,8 +5,9 @@ package auctioncmd;
 
 message AuctionCommand {
     enum CmdType {
-        GET_PLAYER_INFO = 0;
-        UPDATE_PLAYER_INFO = 1;
+        NONE = 0;  
+        GET_PLAYER_INFO = 1;
+        UPDATE_PLAYER_INFO = 2;
     }
     CmdType cmd_type = 1;
     oneof command {
@@ -18,8 +19,9 @@ message AuctionCommand {
 
 message AuctionResponse {
     enum ResponseType {
-        GET_PLAYER_INFO = 0;
-        UPDATE_PLAYER_INFO = 1;
+        ERROR = 0;  
+        GET_PLAYER_INFO = 1;
+        UPDATE_PLAYER_INFO = 2;
     }
     string errormsg = 1;
     ResponseType response_type = 2;
