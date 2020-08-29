@@ -7,7 +7,7 @@ import(
 )
 
 
-func executeRequest(r Wrapper, req *http.Request) *httptest.ResponseRecorder {
+func executeRequest(r MuxWrapper, req *http.Request) *httptest.ResponseRecorder {
     rr := httptest.NewRecorder()
     r.ServeHTTP(rr, req)
     return rr

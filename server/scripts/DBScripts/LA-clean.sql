@@ -1,6 +1,7 @@
 \c leagueauction
 
 drop index if exists la_schema.IDX_USER_EMAIL		cascade;
+drop index if exists la_schema.IDX_PLAYER_ID		cascade;
 drop table if exists la_schema.la_user 			cascade;
 drop table if exists la_schema.la_player 		cascade;
 drop table if exists la_schema.la_user_player_map 	cascade;

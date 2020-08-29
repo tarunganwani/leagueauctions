@@ -1,4 +1,4 @@
-package usermgmt
+package utils
 
 import(
 	// "log"
@@ -18,11 +18,11 @@ type claimsT struct {
 var jwtkey = []byte("$3CRet-Fr3Ak1nG-K3Y")
 
 //CreateJWTForUserLogin - create json web token for user login
-func CreateJWTForUserLogin(userObj User, expirationTime time.Time) (string, error){
+func CreateJWTForUserLogin(emailid string, expirationTime time.Time) (string, error){
 
 	// Create the JWT claims, which includes the username and expiry time
 	claims := &claimsT{
-		Username: userObj.EmailID,
+		Username: emailid,
 		StandardClaims: jwt.StandardClaims{
 			// In JWT, the expiry time is expressed as unix milliseconds
 			ExpiresAt: expirationTime.Unix(),

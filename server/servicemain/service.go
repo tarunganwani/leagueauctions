@@ -5,37 +5,52 @@ import(
 	"github.com/leagueauctions/server/libs/router"
 	"github.com/leagueauctions/server/usermgmt"
 	"github.com/leagueauctions/server/utils"
+	"github.com/leagueauctions/server/auctionctl"
+	"github.com/leagueauctions/server/database"
 )
 
 //LeagueAuction - main app structure
 type LeagueAuction struct{
 	routerCfg router.Config
-	router router.Wrapper
+	router *router.MuxWrapper
 	dbObject *sql.DB
 }
 
-func (la *LeagueAuction)initDatabase() (*sql.DB, error){
+func (la *LeagueAuction)initDatabase() (*database.LeagueAuctionDatastore, error){
 
 	//TODO: move hardcoded values to database config object
 	dbObject, err := utils.OpenPostgreDatabase("postgres", "postgres", "leagueauction")
 	if err != nil{
 		return nil, err
 	}
-	return dbObject, nil
+	datastore, err := database.GetLeagueAuctionDatastore(dbObject)
+	return datastore, nil
 
 }
 
-func (la *LeagueAuction)initUserMgmtRoutes(r router.Wrapper, dbObject *sql.DB) error{
+func (la *LeagueAuction)initUserMgmtRoutes(r *router.MuxWrapper, 
+										laDatastore *database.LeagueAuctionDatastore) error{
 
 	usrMgmtRouter := new(usermgmt.Router)
-	return usrMgmtRouter.Init(r, dbObject)
+	return usrMgmtRouter.Init(r, laDatastore.GetUserstore())
 }
 
-func (la *LeagueAuction)setupEndpoints(r router.Wrapper, dbObject *sql.DB) error{
+// func (la *LeagueAuction)initAuctionRoutes(r *router.MuxWrapper, dbObject *sql.DB, conPool *auctionctl.UserConnectionPool) error{
+
+// 	auctionRouter := new(auctionctl.Router)
+// 	return auctionRouter.Init(r, dbObject,conPool)
+// }
+
+func (la *LeagueAuction)setupEndpoints(r *router.MuxWrapper, 
+										laDatastore *database.LeagueAuctionDatastore, 
+										conPool *auctionctl.UserConnectionPool) error{
 	
-	if err := la.initUserMgmtRoutes(r, dbObject); err != nil{
+	if err := la.initUserMgmtRoutes(r, laDatastore); err != nil{
 		return err
 	}
+	// if err := la.initAuctionRoutes(r, dbObject, conPool); err != nil{
+	// 	return err
+	// }
 	return nil
 }
 
@@ -45,11 +60,17 @@ func (la *LeagueAuction)InitApp(routerCfg router.Config) (err error){
 	if err = la.router.Init(routerCfg); err != nil{
 		return
 	}
-	var dbObj *sql.DB
-	if dbObj, err = la.initDatabase(); err != nil{
+	var laDatastore *database.LeagueAuctionDatastore
+	if laDatastore, err = la.initDatabase(); err != nil{
 		return
 	}
-	if err = la.setupEndpoints(la.router, dbObj); err != nil{
+	
+	
+	// initialize user connection pool
+	userConnPool := new(auctionctl.UserConnectionPool)
+	userConnPool.Init()
+
+	if err = la.setupEndpoints(la.router, laDatastore, userConnPool); err != nil{
 		return
 	}
 	return

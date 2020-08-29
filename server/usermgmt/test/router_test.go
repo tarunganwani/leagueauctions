@@ -2,6 +2,7 @@ package test
 
 
 import (
+	"github.com/leagueauctions/server/database"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -11,21 +12,15 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/leagueauctions/server/usermgmt"
 	"github.com/leagueauctions/server/libs/router"
-	"github.com/leagueauctions/server/utils"
 )
 
 
-func initDBAndRouter(t *testing.T) router.Wrapper{
-	db, err := utils.OpenPostgreDatabase("postgres", "postgres", "leagueauction")
-	if err != nil{
-		t.Fatal(err)
-	}
-	err = clearUserTable(t, db)
-	if (err != nil){
-		t.Fatal(err)
-	}
+func initDBAndRouter(t *testing.T) *router.MuxWrapper{
 
-	var r router.Wrapper = new(router.MuxWrapper)
+	//use mock database
+	mockUserstore := database.GetMockUserStore()
+
+	var r *router.MuxWrapper = new(router.MuxWrapper)
 	routerCfg := router.Config{
 		HostAddress: "localhost", 
 		PortNo : 8081, 
@@ -33,20 +28,20 @@ func initDBAndRouter(t *testing.T) router.Wrapper{
 		CertFilePath : "../../certs/cert.pem",
 		KeyPath : "../../certs/key.pem",
 	}
-	err = r.Init(routerCfg)
+	err := r.Init(routerCfg)
 	if (err != nil){
 		t.Fatal(err)
 	}
 
 	usrMgmtRouter := new(usermgmt.Router)
-	err = usrMgmtRouter.Init(r, db)
+	err = usrMgmtRouter.Init(r, mockUserstore)
 	if (err != nil){
 		t.Fatal(err)
 	}
 	return r
 }
 
-func executeRequest(r router.Wrapper, req *http.Request) *httptest.ResponseRecorder {
+func executeRequest(r *router.MuxWrapper, req *http.Request) *httptest.ResponseRecorder {
     rr := httptest.NewRecorder()
     r.ServeHTTP(rr, req)
     return rr
@@ -126,7 +121,7 @@ func TestRegisterActivationLoginExistingUser(t *testing.T){
 
 	var userInfoResponse usermgmt.UserInfoResponse
 	json.Unmarshal(response.Body.Bytes(), &userInfoResponse)
-	if userInfoResponse.UserSerialID < 0 || userInfoResponse.IsActive == false{
+	if userInfoResponse.UserSerialID == "" || userInfoResponse.IsActive == false{
 		t.Fatal("Expected valid user info. Actual: ", userInfoResponse)
 	}
 	// fmt.Println("userInfoResponse", userInfoResponse)
@@ -252,5 +247,3 @@ func TestErrorRequests(t *testing.T){
 //TODO: create testing stub for activation code
 //probably a functor for creating and verifying user activation code
 //also another functor for creating and using JWT could prove handy
-
-//TODO: check if mocking the db is an easy option for router test, right now router testing is too heavy

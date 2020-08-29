@@ -10,6 +10,7 @@ type LogInRequest struct {
 type LogInResponse struct{
 	Token			string	`json:"login_token"`
 	Expiry			string	`json:"token_expiry"`
+	UserUUID		string	`json:"user_uuid"`
 }
 
 //RegisterRequest - user registration request
@@ -37,7 +38,7 @@ type UserInfoRequest struct {
 
 //UserInfoResponse - user info response
 type UserInfoResponse struct {
-	UserSerialID	int 	`json:"user_serial_id"`
+	UserSerialID	string 	`json:"user_serial_id"`
 	IsActive		bool	`json:"is_active"`
 }
 
