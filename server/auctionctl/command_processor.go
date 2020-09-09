@@ -6,7 +6,7 @@ import(
 	"github.com/leagueauctions/server/database" 
 )
 
-//CommandProcessor -  auction command processor object
+//CommandProcessor -  command processor object
 type CommandProcessor struct{
 	auctionDatastore 	*database.LeagueAuctionDatastore
 }
@@ -19,25 +19,47 @@ func (mp *CommandProcessor)init(laDatastore *database.LeagueAuctionDatastore) er
 	return nil
 }
 
-//ProcessAuctionCmd - function to process auction command
-func (mp *CommandProcessor)ProcessAuctionCmd(auctionCmd *pb.AuctionCommand) (*pb.AuctionResponse, error){
+//GetCommandProcessor - initialize and return auction command processor object
+func GetCommandProcessor(laStore *database.LeagueAuctionDatastore) (*CommandProcessor, error){
+	cmdProcessor := new(CommandProcessor)
+	return cmdProcessor, cmdProcessor.init(laStore)
+}
+
+//ProcessAuctionRequest - function to process auction command
+func (mp *CommandProcessor)ProcessAuctionRequest(auctionReq *pb.AuctionRequest) (*pb.AuctionResponse, error){
 	if mp.auctionDatastore == nil{
 		return nil, errors.New("Auction data store can not be nil")
 	}
-	switch auctionCmd.GetCmdType(){
-	case pb.AuctionCommand_GET_PLAYER_INFO:
-		if getPlayerInfoCmd := auctionCmd.GetGetPlayerInfoCmd(); getPlayerInfoCmd != nil{
-			return processGetPlayerInfoRequest(getPlayerInfoCmd, mp.auctionDatastore.LAPlayerStore)
+	switch auctionReq.GetRequestType(){
+
+	case pb.AuctionRequest_FETCH_PLAYER_INFO_BY_USER_UUID:
+		if fetchPlayerInfoByUserUUIDReq := auctionReq.GetFetchPlayerInfoByUserUuidRequest(); fetchPlayerInfoByUserUUIDReq != nil{
+			return processFetchPlayerInfoByUserUUIDRequest(fetchPlayerInfoByUserUUIDReq, mp.auctionDatastore.LAPlayerStore)
 		}
 		//TODO: handle error - send error in auction response? or move this to processor
-		return nil, errors.New("Bad GetPlayerInfo Command")
-	case pb.AuctionCommand_UPDATE_PLAYER_INFO:
-		if updatePlayerInfoCmd := auctionCmd.GetUpdatePlayerInfoCmd(); updatePlayerInfoCmd != nil{
-			return processUpdatePlayerInfoRequest(updatePlayerInfoCmd, mp.auctionDatastore.LAPlayerStore)
+		return nil, errors.New("Bad FetchPlayerInfoByUserUUID Request")
+
+	case pb.AuctionRequest_FETCH_PLAYER_INFO_BY_PLAYER_UUID:
+		if fetchPlayerInfoByPlayerUUIDReq := auctionReq.GetFetchPlayerInfoByPlayerUuidRequest(); fetchPlayerInfoByPlayerUUIDReq != nil{
+			return processFetchPlayerInfoByPlayerUUIDRequest(fetchPlayerInfoByPlayerUUIDReq, mp.auctionDatastore.LAPlayerStore)
+		}
+		//TODO: handle error - send error in auction response? or move this to processor
+		return nil, errors.New("Bad FetchPlayerInfoByPlayerUUID Request")
+
+	case pb.AuctionRequest_UPDATE_PLAYER_INFO:
+		if updatePlayerInfoReq := auctionReq.GetUpdatePlayerInfoRequest(); updatePlayerInfoReq != nil{
+			return processUpdatePlayerInfoRequest(updatePlayerInfoReq, mp.auctionDatastore.LAPlayerStore)
 		}
 		//TODO: handle error - send error in auction response? or move this to processors
-		return nil, errors.New("Bad UpdatePlayerInfo Command")
+		return nil, errors.New("Bad UpdatePlayerInfo Request")
+
+	case pb.AuctionRequest_CREATE_AUCTION_BOARD:
+		// if createAuctionReq := auctionReq.GetCreateAuctionBoardRequest(); createAuctionReq != nil{
+		// 	return processCreateAuctionBoardRequest(createAuctionReq, mp.auctionDatastore.LAAuctionStore)
+		// }
+		return nil, errors.New("Unimplemented request processor")
+
 	default:
-		return nil, errors.New("ProcessAuctionCmd : unsupported command")
+		return nil, errors.New("ProcessAuctionRequest : unsupported request")
 	}
 }

@@ -25,3 +25,7 @@ change postgres user password. this is sorta required to connect to league aucti
 inside psql prompt
 >> ALTER USER postgres PASSWORD 'newPassword';
 https://stackoverflow.com/questions/7695962/postgresql-password-authentication-failed-for-user-postgres
+
+# Proto buf dependencies
+
+go get "github.com/golang/protobuf/ptypes/timestamp"

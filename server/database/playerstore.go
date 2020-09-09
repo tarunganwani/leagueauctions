@@ -27,6 +27,7 @@ type UserPlayerMap struct{
 //PlayerStore - Player db store contract
 type PlayerStore interface{
 	GetPlayerByUserUUID(userUUID uuid.UUID) (*Player, error)
+	GetPlayerByPlayerUUID(playerUUID uuid.UUID) (*Player, error)
 	UpdatePlayerInfoForUser(player *Player, userUUID uuid.UUID) error
 }
 
@@ -72,6 +73,20 @@ func (ps *playerStoreDbImpl)GetPlayerByUserUUID(userUUID uuid.UUID) (*Player, er
 	player := new(Player)
 	player.PlayerID = up.PlayerID
 	err = ps.db.QueryRow(fetchPlayerInfoByPlayerUUIDQuery,up.PlayerID).Scan(&player.PlayerName, &player.PlayerBio, &player.PlayerProfileLink, &player.PlayerType, &player.PlayerPicture, &player.IsActive)
+	if err != nil{
+		return nil, err
+	}
+	return player, nil
+}
+
+
+func (ps *playerStoreDbImpl)GetPlayerByPlayerUUID(playerUUID uuid.UUID) (*Player, error) {
+	if ps.db == nil {
+		return nil, errors.New("database object con not be nil")
+	}
+	player := new(Player)
+	player.PlayerID = playerUUID
+	err := ps.db.QueryRow(fetchPlayerInfoByPlayerUUIDQuery,playerUUID).Scan(&player.PlayerName, &player.PlayerBio, &player.PlayerProfileLink, &player.PlayerType, &player.PlayerPicture, &player.IsActive)
 	if err != nil{
 		return nil, err
 	}
@@ -129,8 +144,16 @@ func (ps *playerStoreMockImpl)GetPlayerByUserUUID(userUUID uuid.UUID) (*Player, 
 	return nil, sql.ErrNoRows
 }
 
+func (ps *playerStoreMockImpl)GetPlayerByPlayerUUID(playerUUID uuid.UUID) (*Player, error) {
+	if player, playerfound := ps.playerIDInfoMap[playerUUID]; playerfound == true{
+		return player, nil
+	}
+	return nil, sql.ErrNoRows
+}
+
 func (ps *playerStoreMockImpl)UpdatePlayerInfoForUser(player *Player, userUUID uuid.UUID) error{
 	if playerUUID, found := ps.userPlayerIDMap[userUUID]; found == true{
+		player.PlayerID = ps.playerIDInfoMap[playerUUID].PlayerID	// preserve playerid
 		ps.playerIDInfoMap[playerUUID] = player
 		return nil
 	}

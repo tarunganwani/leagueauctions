@@ -57,10 +57,10 @@ func (cr *connectionReader)Listen(userid string, conn *websocket.Conn) (err erro
 			return
 		}
 		if (messageType == websocket.BinaryMessage){
-			auctioncmd  := &pb.AuctionCommand{}
-			if err := proto.Unmarshal(msg, auctioncmd); err == nil{
+			auctionReq  := &pb.AuctionRequest{}
+			if err := proto.Unmarshal(msg, auctionReq); err == nil{
 				log.Println("Listen ", userid, " Process auction command..")
-				cmdResponse, cmdErr := cr.cmdProcessor.ProcessAuctionCmd(auctioncmd)
+				cmdResponse, cmdErr := cr.cmdProcessor.ProcessAuctionRequest(auctionReq)
 				if cmdErr != nil{
 					log.Println("Listen command processing error:", cmdErr)
 					cr.SendErrorMsg(cmdErr.Error(), conn)

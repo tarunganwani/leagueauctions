@@ -70,25 +70,56 @@ func executeRequest(r *router.MuxWrapper, req *http.Request) *httptest.ResponseR
     return rr
 }
 
-func TestWsConnectionWithSampleCommand(t *testing.T){
+func FetchPlayerInfoByUserUUIDRequest(playeruuidStr string) *pb.AuctionRequest{
+	playerinfoRequest := new(pb.FetchPlayerInfoByUserUUIDRequest)
+	playerinfoRequest.UserUuid = playeruuidStr
 
-	r, _, auctionRouter := initDBAndRouter(t)
+	auctionCmdRequest := new(pb.AuctionRequest)
+	auctionCmdRequest.RequestType = pb.AuctionRequest_FETCH_PLAYER_INFO_BY_USER_UUID
+	auctionCmdRequest.Request = &pb.AuctionRequest_FetchPlayerInfoByUserUuidRequest{ FetchPlayerInfoByUserUuidRequest : playerinfoRequest }
+	return auctionCmdRequest
+}
+
+func FetchPlayerInfoByPlayerUUIDRequest(playeruuidStr string) *pb.AuctionRequest{
+	playerinfoRequest := new(pb.FetchPlayerInfoByPlayerUUIDRequest)
+	playerinfoRequest.PlayerUuid = playeruuidStr
+
+	auctionCmdRequest := new(pb.AuctionRequest)
+	auctionCmdRequest.RequestType = pb.AuctionRequest_FETCH_PLAYER_INFO_BY_PLAYER_UUID
+	auctionCmdRequest.Request = &pb.AuctionRequest_FetchPlayerInfoByPlayerUuidRequest{ FetchPlayerInfoByPlayerUuidRequest : playerinfoRequest }
+	return auctionCmdRequest
+}
+
+func GetUpdatePlayerInfoRequest(playeruuidStr string, playername string ,playertype int) *pb.AuctionRequest{
+	updatePlayerInfoRequest := new(pb.UpdatePlayerInfoRequest)
+	updatePlayerInfoRequest.UserUuid = playeruuidStr
+	updatePlayerInfoRequest.PlayerName = playername
+	updatePlayerInfoRequest.PlayerType = pb.PlayerType(playertype)
+		
+	updateAuctionCmdRequest := new(pb.AuctionRequest)
+	updateAuctionCmdRequest.RequestType = pb.AuctionRequest_UPDATE_PLAYER_INFO
+	updateAuctionCmdRequest.Request = &pb.AuctionRequest_UpdatePlayerInfoRequest{ UpdatePlayerInfoRequest : updatePlayerInfoRequest }
+	return updateAuctionCmdRequest
+}
+
+func RegisterAndLoginUser(r *router.MuxWrapper, emailid string, pwd string, activationcode string) usermgmt.LogInResponse{
 	
-	// ---- Setup user data ----
+	userid := emailid
+	pwdstr := pwd
+
 
 	//Register new user
-	var RegistrationJSONReqStr = []byte(`{"user_id":"mockuser@leagueauctions.com", "user_password": "pwd123"}`)
+	var RegistrationJSONReqStr = []byte(`{"user_id":"`+emailid+`", "user_password":"`+pwdstr+`" }`)
 	req, _ := http.NewRequest("POST", "/user/register", bytes.NewBuffer(RegistrationJSONReqStr))
 	response := executeRequest(r, req)
 
 	//activate user
-	var activationJSONRequest = []byte(`{"user_id":"mockuser@leagueauctions.com", "user_activation_code": "123456"}`)
+	var activationJSONRequest = []byte(`{"user_id":"`+emailid+`", "user_activation_code": "`+activationcode+`"}`)
 	req, _ = http.NewRequest("POST", "/user/activation", bytes.NewBuffer(activationJSONRequest))
 	response = executeRequest(r, req)
 
 	//log in to fetch sesison token
-	userid := "mockuser@leagueauctions.com"
-	pwdstr := "pwd123"
+	
 	jsonRequest := "{\"user_id\": \"" + userid +"\", \"user_password\": \""+pwdstr+"\"}"
 	log.Println("jsonRequest ", jsonRequest)
 	var loginJSONRequest = []byte(jsonRequest)
@@ -97,17 +128,23 @@ func TestWsConnectionWithSampleCommand(t *testing.T){
 
 	var loginResponse usermgmt.LogInResponse
 	json.Unmarshal(response.Body.Bytes(), &loginResponse)
-	if loginResponse.Token == "" || loginResponse.Expiry == ""{
-		t.Fatal("CLIENT:: Expected valid login response. Actual: ", loginResponse)
-	}
+	return loginResponse
+}
 
+
+type testCommand struct{
+	cmd *pb.AuctionRequest
+	cmdname string
+}
+
+func GetWebSocketConnection(t *testing.T, auctionRouter *auctionctl.Router, userid string, token string) *websocket.Conn{
 
 	// ---- set up server to serve ws request ----
 	h := http.HandlerFunc(auctionRouter.UpgradeToWsHandler)
 	s := httptest.NewServer(h)
 	defer s.Close()
 
-	connectWsURL := "ws://" + s.Listener.Addr().String() + "/connect?user=" + userid + ";token=" + loginResponse.Token
+	connectWsURL := "ws://" + s.Listener.Addr().String() + "/connect?user=" + userid + ";token=" + token
 	// connectWsURL := "ws://localhost:8080/connect?user=" + userid + ";token=" + loginResponse.Token
 	conn, resp, err := websocket.DefaultDialer.Dial(connectWsURL, nil)
 	if err != nil{
@@ -122,27 +159,34 @@ func TestWsConnectionWithSampleCommand(t *testing.T){
 	if got, want := resp.StatusCode, http.StatusSwitchingProtocols; got != want {
 		t.Errorf("CLIENT:: resp.StatusCode = %q, want %q", got, want)
 	}
+	return conn
+}
+func TestWsConnectionWithSampleCommand(t *testing.T){
 
+	// ---- Setup user data ----
 
-	//Update player info
-	updatePlayerInfoRequest := pb.UpdatePlayerInfoCommand{}
-	updatePlayerInfoRequest.UserUuid = loginResponse.UserUUID
-	updatePlayerInfoRequest.PlayerName = "TG"
-	updatePlayerInfoRequest.PlayerType = 2
-		
-	updateAuctionCmdRequest := pb.AuctionCommand{}
-	updateAuctionCmdRequest.CmdType = pb.AuctionCommand_UPDATE_PLAYER_INFO
-	updateAuctionCmdRequest.Command = &pb.AuctionCommand_UpdatePlayerInfoCmd{ UpdatePlayerInfoCmd : &updatePlayerInfoRequest }
+	r, _, auctionRouter := initDBAndRouter(t)
+	userid := "mockuser@leagueauctions.com"
+	loginResponse := RegisterAndLoginUser(r, userid, "pwd123", "123456")
+	if loginResponse.Token == "" || loginResponse.Expiry == ""{
+		t.Fatal("CLIENT:: Expected valid login response. Actual: ", loginResponse)
+	}
 
+	conn := GetWebSocketConnection(t, auctionRouter, userid, loginResponse.Token)
+	cmdList := make([]testCommand, 0)
+
+	//create player info
+	updateAuctionCmdRequest := GetUpdatePlayerInfoRequest(loginResponse.UserUUID, "TG", 2)
+	updateAuctionCmdRequest2 := GetUpdatePlayerInfoRequest(loginResponse.UserUUID, "TG-updated", 2)
+
+	cmdList = append(cmdList, testCommand{updateAuctionCmdRequest, "Create test player TG"})
+	cmdList = append(cmdList, testCommand{updateAuctionCmdRequest2, "Update test player TG name"})
 
 	//Get player info
-	playerinfoRequest := pb.GetPlayerInfoCommand{}
-	playerinfoRequest.UserUuid = loginResponse.UserUUID	
+	auctionCmdRequest := FetchPlayerInfoByUserUUIDRequest(loginResponse.UserUUID)
+	cmdList = append(cmdList, testCommand{auctionCmdRequest, "Get test player info by user uuid for TG"})
 
-	auctionCmdRequest := pb.AuctionCommand{}
-	auctionCmdRequest.CmdType = pb.AuctionCommand_GET_PLAYER_INFO
-	auctionCmdRequest.Command = &pb.AuctionCommand_GetPlayerInfoCmd{ GetPlayerInfoCmd : &playerinfoRequest }
-
+	
 	respChan := make(chan []byte)
 	errChan := make(chan string)
 
@@ -166,23 +210,21 @@ func TestWsConnectionWithSampleCommand(t *testing.T){
     }()
 
 	//Write request on web socket channel
+	err := error(nil)
+	for _, msg := range cmdList{
+		log.Println("[CLIENT] :: Command name ", msg.cmdname)
+		log.Println("[CLIENT] :: Sending Command ", msg.cmd)
+		protomsgCmdReqBytes, _ := proto.Marshal(msg.cmd)
+		err = conn.WriteMessage(websocket.BinaryMessage, protomsgCmdReqBytes)
 
-	updateAuctionCmdReqBytes, _ := proto.Marshal(&updateAuctionCmdRequest)
-	err = conn.WriteMessage(websocket.BinaryMessage, updateAuctionCmdReqBytes)
-
-	if err != nil{
-		t.Fatal(err)
-	}
-	auctionCmdReqBytes, _ := proto.Marshal(&auctionCmdRequest)
-	err = conn.WriteMessage(websocket.BinaryMessage, auctionCmdReqBytes)
-
-	if err != nil{
-		t.Fatal(err)
+		if err != nil{
+			t.Fatal(err)
+		}
 	}
 
 	//Read from connection read channels
 
-	for i := 0 ; i <2; i++{
+	for i := 0 ; i < len(cmdList); i++{
 		select{
 		case errc := <-errChan:
 			log.Println("CLIENT:: errc ", errc)

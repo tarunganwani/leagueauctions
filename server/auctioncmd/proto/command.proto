@@ -3,16 +3,22 @@ syntax = "proto3";
 package auctioncmd;
 // option go_package = "github.com/leagueauctions/server";
 
-message AuctionCommand {
-    enum CmdType {
+import "google/protobuf/timestamp.proto";
+
+message AuctionRequest {
+    enum RequestType {
         NONE = 0;  
-        GET_PLAYER_INFO = 1;
-        UPDATE_PLAYER_INFO = 2;
+        FETCH_PLAYER_INFO_BY_USER_UUID = 1;
+        FETCH_PLAYER_INFO_BY_PLAYER_UUID = 2;
+        UPDATE_PLAYER_INFO = 3;
+        CREATE_AUCTION_BOARD = 4;
     }
-    CmdType cmd_type = 1;
-    oneof command {
-        GetPlayerInfoCommand get_player_info_cmd = 2;
-        UpdatePlayerInfoCommand update_player_info_cmd = 3;
+    RequestType request_type = 1;
+    oneof request {
+        FetchPlayerInfoByUserUUIDRequest fetch_player_info_by_user_uuid_request = 2;
+        FetchPlayerInfoByPlayerUUIDRequest fetch_player_info_by_player_uuid_request = 3;
+        UpdatePlayerInfoRequest update_player_info_request = 4;
+        CreateAuctionBoardRequest create_auction_board_request = 5;
     }
 }
 
@@ -20,14 +26,16 @@ message AuctionCommand {
 message AuctionResponse {
     enum ResponseType {
         ERROR = 0;  
-        GET_PLAYER_INFO = 1;
+        FETCH_PLAYER_INFO = 1;
         UPDATE_PLAYER_INFO = 2;
+        CREATE_AUCTION_BOARD = 3;
     }
     string errormsg = 1;
     ResponseType response_type = 2;
     oneof response {
-        GetPlayerInfoResponse get_player_info_response = 3;
+        FetchPlayerInfoResponse fetch_player_info_response = 3;
         UpdatePlayerInfoResponse update_player_info_response = 4;
+        CreateAuctionBoardResponse create_auction_board_response = 5;
     }
 }
 
@@ -42,21 +50,26 @@ enum PlayerType {
     BOWLING_ALL_ROUNDER = 6;
 }
 
-message GetPlayerInfoCommand {
+message FetchPlayerInfoByUserUUIDRequest {
     string user_uuid = 1;
 }
 
-message GetPlayerInfoResponse {
-    string player_name = 1;
-    string player_bio = 2;
-    string player_profile_link = 3;
-    PlayerType player_type = 4;
-    bytes player_picture = 5;
-    bool is_player_active = 6;
+message FetchPlayerInfoByPlayerUUIDRequest {
+    string player_uuid = 1;
+}
+
+message FetchPlayerInfoResponse {
+    string player_uuid = 1;
+    string player_name = 2;
+    string player_bio = 3;
+    string player_profile_link = 4;
+    PlayerType player_type = 5;
+    bytes player_picture = 6;
+    bool is_player_active = 7;
 }
 
 
-message UpdatePlayerInfoCommand {
+message UpdatePlayerInfoRequest {
     string user_uuid = 1;
     string player_name = 2;
     string player_bio = 3;
@@ -68,4 +81,45 @@ message UpdatePlayerInfoCommand {
 
 message UpdatePlayerInfoResponse {
     bool update_success = 1;
+    string player_uuid = 2;
+}
+
+// -----------------------  Auction board messages -----------------------
+
+
+// message AuctionPlayer {
+//     string auction_player_id = 1;
+// }
+
+message PlayerCategory{
+    string category_name = 1;
+    uint64 player_base_price = 2;
+    //repeated AuctionPlayer player_id_set = 3;
+}
+
+enum ParticipantRole {
+    VIEWER_ONLY = 0;
+    BIDDER = 1;
+    CO_AUCTIONEER = 2;
+    PLAYER_UNDER_HAMMER = 3;
+}
+
+message AutionParticipant {
+    string player_id = 1;
+    ParticipantRole participant_role = 2;
+    PlayerCategory player_category = 3; //optional player category - set when role = PLAYER_UNDER_HAMMER
+}
+
+message CreateAuctionBoardRequest {
+    string auctioneer_player_uuid = 1;
+    google.protobuf.Timestamp schedule_time = 2;
+    uint64 purse_money = 3;
+    string purse_ccy = 4;
+    repeated PlayerCategory player_category_list = 5;
+    // repeated AutionParticipant participant_list = 5;
+}
+
+message CreateAuctionBoardResponse {
+    string auction_board_uuid = 1;
+    uint32 auction_code = 2;
 }

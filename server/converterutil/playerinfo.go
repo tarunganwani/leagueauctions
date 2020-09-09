@@ -6,23 +6,24 @@ import(
 )
 
 //GenerateGetPlayerInfoResponse - convert player db object into proto response
-func GenerateGetPlayerInfoResponse(playerDbObj *database.Player) (*pb.GetPlayerInfoResponse) {
+func GenerateGetPlayerInfoResponse(playerDbObj *database.Player) (*pb.FetchPlayerInfoResponse) {
 	if playerDbObj == nil{
 		return nil
 	}
-	playerInfoResponse := new(pb.GetPlayerInfoResponse)
+	playerInfoResponse := new(pb.FetchPlayerInfoResponse)
 	playerInfoResponse.IsPlayerActive = playerDbObj.IsActive
 	playerInfoResponse.PlayerBio = playerDbObj.PlayerBio
 	playerInfoResponse.PlayerName = playerDbObj.PlayerName
 	playerInfoResponse.PlayerPicture = playerDbObj.PlayerPicture
 	playerInfoResponse.PlayerProfileLink = playerDbObj.PlayerProfileLink
 	playerInfoResponse.PlayerType = pb.PlayerType(playerDbObj.PlayerType)
+	playerInfoResponse.PlayerUuid = playerDbObj.PlayerID.String()
 	return playerInfoResponse
 }
 
 
 //GeneratePlayerDbObject - convert proto response into player db object
-func GeneratePlayerDbObject (updatePlayerInfoCmd *pb.UpdatePlayerInfoCommand) (*database.Player){
+func GeneratePlayerDbObject (updatePlayerInfoCmd *pb.UpdatePlayerInfoRequest) (*database.Player){
 	if updatePlayerInfoCmd == nil{
 		return nil
 	}
