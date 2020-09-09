@@ -1,0 +1,4 @@
+1) SSL Certs
+2) run the entire code in android
+2) Currently using the following library for OTP : https://github.com/tttstudios/react-native-otp-input
+Install the following module for otp screen to work with android "npm install --save @react-native-community/clipboard"
