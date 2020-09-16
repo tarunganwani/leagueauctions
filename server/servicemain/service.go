@@ -32,7 +32,7 @@ func (la *LeagueAuction)initUserMgmtRoutes(r *router.MuxWrapper,
 										laDatastore *database.LeagueAuctionDatastore) error{
 
 	usrMgmtRouter := new(usermgmt.Router)
-	return usrMgmtRouter.Init(r, laDatastore.GetUserstore())
+	return usrMgmtRouter.Init(r, laDatastore.LAUserstore)
 }
 
 // func (la *LeagueAuction)initAuctionRoutes(r *router.MuxWrapper, dbObject *sql.DB, conPool *auctionctl.UserConnectionPool) error{
