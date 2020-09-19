@@ -179,7 +179,7 @@ language plpgsql
 as
 $$
 declare
-	out_auction_code integer;
+	out_auction_code INT;
 	in_category_item category_item;
 begin
 	INSERT INTO la_schema.la_auctionboard(auction_id, auctioneer_id, auction_name, schedule_time, purse, purse_ccy)

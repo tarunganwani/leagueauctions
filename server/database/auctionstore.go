@@ -24,6 +24,22 @@ type AuctionBoard struct{
 	CategorySet			[]*Category	//Name to category object map
 }
 
+//NewAuctionBoardObject - create new board obj
+func NewAuctionBoardObject(auctionBoardUUID uuid.UUID, auctioneerUUID uuid.UUID,
+						name string, schtime time.Time, purse uint64, ccy string,
+						catList []*Category)(*AuctionBoard){
+	board := new(AuctionBoard)
+	board.AuctionBoardUUID = auctionBoardUUID
+	board.AuctioneerUUID = auctioneerUUID
+	board.AuctionName = name
+	board.ScheduleTime = schtime
+	board.Purse = purse
+	board.PurceCcy = ccy
+	board.CategorySet = catList
+	return board
+
+}
+
 //Category - business object to represent database la_category record
 type Category struct{
 	CategoryUUID		uuid.UUID
@@ -53,7 +69,13 @@ func GetAuctionDBStore(_db *sql.DB) AuctionStore{
 }
 
 const (
-	createAuctionBoardQuery = `SELECT insert_auction_board_info($1, $2, $3, $4, $5, $6, $7::category_item[]) as auction_code`
+	createAuctionBoardQuery 		= `SELECT insert_auction_board_info($1, $2, $3, $4, $5, $6, $7::category_item[]) as auction_code`
+	fetchAuctionBoardQuery 			= `SELECT auctioneer_id, auction_name, schedule_time, purse, purse_ccy, is_active, auction_code FROM la_schema.la_auctionboard WHERE auction_id = $1`
+	fetchAuctionCategoryListQuery 	= `SELECT category_id, category_name, base_price FROM la_schema.la_category WHERE auction_id = $1`
+	deleteAuctionBoardQuery			= `UPDATE la_schema.la_auctionboard SET is_active = false WHERE auction_id = $1`
+	updateAuctionBoardQuery			= `UPDATE la_schema.la_auctionboard SET auctioneer_id = $1, auction_name = $2, schedule_time = $3, purse = $4, purse_ccy = $5 WHERE auction_id = $6`
+	// updateCategoryQuery				= `UPDATE la_schema.la_category SET category_name = $1, base_price = $2 WHERE category_id = $3`
+	// deleteCategoryQuery				= `DELETE FROM la_schema.la_category WHERE category_id = $1`
 )
 
 type auctionStoreDbImpl struct{
@@ -80,10 +102,11 @@ func (as *auctionStoreDbImpl)CreateAuctionBoard(auctionBoard *AuctionBoard) erro
 		log.Println("[DBG]cat val ", *catVal)
 	}
 	log.Println("[DBG]auctionBoard val ", *auctionBoard)
-	err := as.db.QueryRow(createAuctionBoardQuery,auctionBoard.AuctionBoardUUID, auctionBoard.AuctioneerUUID,
-												auctionBoard.AuctionName,
-												auctionBoard.ScheduleTime.UTC(), auctionBoard.Purse,
-												auctionBoard.PurceCcy, pq.Array(auctionBoard.CategorySet)).Scan(&auctionBoard.AuctionCode)
+	err := as.db.QueryRow(createAuctionBoardQuery,
+							auctionBoard.AuctionBoardUUID, auctionBoard.AuctioneerUUID,
+                            auctionBoard.AuctionName,
+                            auctionBoard.ScheduleTime.UTC(), auctionBoard.Purse,
+							auctionBoard.PurceCcy, pq.Array(auctionBoard.CategorySet)).Scan(&auctionBoard.AuctionCode)
 	if err != nil{
 		return err
 	}
@@ -91,15 +114,57 @@ func (as *auctionStoreDbImpl)CreateAuctionBoard(auctionBoard *AuctionBoard) erro
 }
 
 func (as *auctionStoreDbImpl)GetAuctionBoardInfo(auctionUUID uuid.UUID) (*AuctionBoard, error) {
-	return nil, errors.New("Unimplemented")
+	if as.db == nil {
+		return nil, errors.New("database object can not be nil")
+	}
+
+	auctionBoard := new(AuctionBoard)
+	auctionBoard.AuctionBoardUUID = auctionUUID
+	err := as.db.QueryRow(fetchAuctionBoardQuery,auctionUUID).Scan(
+					&auctionBoard.AuctioneerUUID, &auctionBoard.AuctionName, 
+					&auctionBoard.ScheduleTime, &auctionBoard.Purse, &auctionBoard.PurceCcy,
+					&auctionBoard.IsActive,  &auctionBoard.AuctionCode)
+	if err != nil{
+		return nil, err
+	}
+	catRows, err := as.db.Query(fetchAuctionCategoryListQuery,auctionUUID)
+	if err != nil{
+		return nil, err
+	}
+	defer catRows.Close()
+	for catRows.Next() {
+		cat := new(Category)
+		if err := catRows.Scan(&cat.CategoryUUID, &cat.CategoryName, &cat.BasePrice); err != nil {
+			return nil, err
+		}
+		auctionBoard.CategorySet = append(auctionBoard.CategorySet, cat)
+	}
+	return auctionBoard, nil
 }
 
 func (as *auctionStoreDbImpl)UpdateAuctionBoardInfo(auctionBoard *AuctionBoard) error{
-	return errors.New("Unimplemented")
+	if as.db == nil {
+		return errors.New("database object con not be nil")
+	}
+	if auctionBoard == nil {
+		return errors.New("auctionboard object not be nil")
+	}
+	_, err := as.db.Exec(updateAuctionBoardQuery, auctionBoard.AuctioneerUUID,
+										auctionBoard.AuctionName, auctionBoard.ScheduleTime, 
+										auctionBoard.Purse, auctionBoard.PurceCcy,
+										auctionBoard.AuctionBoardUUID)
+	return err
 }
 
 func (as *auctionStoreDbImpl)DeleteAuctionBoardInfo(auctionUUID uuid.UUID) error{
-	return errors.New("Unimplemented")
+	if as.db == nil {
+		return errors.New("database object con not be nil")
+	}
+	if auctionUUID == uuid.Nil {
+		return errors.New("auctionUUID not be nil")
+	}
+	_, err := as.db.Exec(deleteAuctionBoardQuery, auctionUUID)
+	return err
 }
 
 //GetAuctionMockStore - get auction database store for tests
@@ -117,6 +182,7 @@ type auctionStoreMockImpl struct{
 func (as *auctionStoreMockImpl)CreateAuctionBoard(auctionBoard *AuctionBoard) error{
 	auctionUUID := uuid.New()
 	as.auctionMap [auctionUUID] = auctionBoard
+	auctionBoard.AuctionBoardUUID = auctionUUID
 	auctionBoard.IsActive = true
 	return nil
 }
