@@ -54,10 +54,28 @@ func (mp *CommandProcessor)ProcessAuctionRequest(auctionReq *pb.AuctionRequest) 
 		return nil, errors.New("Bad UpdatePlayerInfo Request")
 
 	case pb.AuctionRequest_CREATE_AUCTION_BOARD:
-		// if createAuctionReq := auctionReq.GetCreateAuctionBoardRequest(); createAuctionReq != nil{
-		// 	return processCreateAuctionBoardRequest(createAuctionReq, mp.auctionDatastore.LAAuctionStore)
-		// }
-		return nil, errors.New("Unimplemented request processor")
+		if createAuctionReq := auctionReq.GetCreateAuctionBoardRequest(); createAuctionReq != nil{
+			return processCreateAuctionBoardRequest(createAuctionReq, mp.auctionDatastore.LAAuctionStore)
+		}
+		return nil, errors.New("Bad CreateAuctionBoard Request")
+
+	case pb.AuctionRequest_UPDATE_AUCTION_BOARD:
+		if updateAuctionReq := auctionReq.GetUpdateAuctionBoardRequest(); updateAuctionReq != nil{
+			return processUpdateAuctionBoardRequest(updateAuctionReq, mp.auctionDatastore.LAAuctionStore)
+		}
+		return nil, errors.New("Bad UpdateAuctionBoard Request")
+
+	case pb.AuctionRequest_DELETE_AUCTION_BOARD:
+		if deleteAuctionReq := auctionReq.GetDeleteAuctionBoardRequest(); deleteAuctionReq != nil{
+			return processDeleteAuctionBoardRequest(deleteAuctionReq, mp.auctionDatastore.LAAuctionStore)
+		}
+		return nil, errors.New("Bad DeleteAuctionBoard Request")
+
+	case pb.AuctionRequest_FETCH_AUCTION_BOARD_INFO:
+		if fetchAuctionReq := auctionReq.GetFetchAuctionBoardRequest(); fetchAuctionReq != nil{
+			return processFetchAuctionBoardRequest(fetchAuctionReq, mp.auctionDatastore.LAAuctionStore)
+		}
+		return nil, errors.New("Bad FetchAuctionBoard Request")
 
 	default:
 		return nil, errors.New("ProcessAuctionRequest : unsupported request")

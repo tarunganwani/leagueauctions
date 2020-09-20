@@ -82,11 +82,11 @@ create table IF NOT EXISTS la_schema.la_category (
 	base_price		BIGINT	NOT NULL,
 	PRIMARY KEY(category_id),
 	FOREIGN KEY(auction_id)		REFERENCES la_schema.la_auctionboard(auction_id) ON DELETE CASCADE
-	
+
 );
 
 /*Players going under the hammer*/
-create table IF NOT EXISTS la_schema.la_player_pool(
+/*create table IF NOT EXISTS la_schema.la_player_pool(
 	pool_id			UUID 	DEFAULT uuid_generate_v4 () 	NOT NULL,
 	auction_id		UUID	NOT NULL,
 	player_id		UUID	NOT NULL,
@@ -96,7 +96,7 @@ create table IF NOT EXISTS la_schema.la_player_pool(
 	FOREIGN KEY(auction_id)		REFERENCES la_schema.la_auctionboard(auction_id) ON DELETE CASCADE,
 	FOREIGN KEY(category_id)	REFERENCES la_schema.la_category(category_id) ON DELETE CASCADE,
 	FOREIGN KEY(player_id)		REFERENCES la_schema.la_player(player_id) ON DELETE CASCADE
-);
+);*/
 
 /*Participants involved in an auction*/
 create table IF NOT EXISTS la_schema.la_participant(
@@ -104,10 +104,17 @@ create table IF NOT EXISTS la_schema.la_participant(
 	player_id	UUID	NOT NULL,
 	auction_id	UUID	NOT NULL,
 	participant_role	INT	NOT NULL,
+	category_id			UUID	NOT NULL,
 	PRIMARY KEY(participant_id),
 	FOREIGN KEY(auction_id)	REFERENCES la_schema.la_auctionboard(auction_id) ON DELETE CASCADE,
 	FOREIGN KEY(player_id)	REFERENCES la_schema.la_player(player_id) ON DELETE CASCADE
 );
+
+comment on column la_schema.la_participant.participant_id is 'Participant UUID';
+comment on column la_schema.la_participant.player_id is 'Associated player UUID';
+comment on column la_schema.la_participant.auction_id is 'Associated auction board UUID';
+comment on column la_schema.la_participant.participant_role is 'Role: 1-Captain(Bidder) 2-Player 3-Viewer ';
+comment on column la_schema.la_participant.category_id is 'Category UUID';
 
 -- Bidding tables
 

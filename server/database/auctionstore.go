@@ -73,7 +73,7 @@ const (
 	fetchAuctionBoardQuery 			= `SELECT auctioneer_id, auction_name, schedule_time, purse, purse_ccy, is_active, auction_code FROM la_schema.la_auctionboard WHERE auction_id = $1`
 	fetchAuctionCategoryListQuery 	= `SELECT category_id, category_name, base_price FROM la_schema.la_category WHERE auction_id = $1`
 	deleteAuctionBoardQuery			= `UPDATE la_schema.la_auctionboard SET is_active = false WHERE auction_id = $1`
-	updateAuctionBoardQuery			= `UPDATE la_schema.la_auctionboard SET auctioneer_id = $1, auction_name = $2, schedule_time = $3, purse = $4, purse_ccy = $5 WHERE auction_id = $6`
+	updateAuctionBoardQuery			= `UPDATE la_schema.la_auctionboard auction_name = $1, schedule_time = $2, purse = $3, purse_ccy = $4 WHERE auction_id = $5`
 	// updateCategoryQuery				= `UPDATE la_schema.la_category SET category_name = $1, base_price = $2 WHERE category_id = $3`
 	// deleteCategoryQuery				= `DELETE FROM la_schema.la_category WHERE category_id = $1`
 )
@@ -149,10 +149,10 @@ func (as *auctionStoreDbImpl)UpdateAuctionBoardInfo(auctionBoard *AuctionBoard) 
 	if auctionBoard == nil {
 		return errors.New("auctionboard object not be nil")
 	}
-	_, err := as.db.Exec(updateAuctionBoardQuery, auctionBoard.AuctioneerUUID,
-										auctionBoard.AuctionName, auctionBoard.ScheduleTime, 
-										auctionBoard.Purse, auctionBoard.PurceCcy,
-										auctionBoard.AuctionBoardUUID)
+	_, err := as.db.Exec(updateAuctionBoardQuery,
+							auctionBoard.AuctionName, auctionBoard.ScheduleTime, 
+							auctionBoard.Purse, auctionBoard.PurceCcy,
+							auctionBoard.AuctionBoardUUID)
 	return err
 }
 
@@ -194,9 +194,13 @@ func (as *auctionStoreMockImpl)GetAuctionBoardInfo(auctionUUID uuid.UUID) (*Auct
 	return nil, sql.ErrNoRows
 }
 
-func (as *auctionStoreMockImpl)UpdateAuctionBoardInfo(auctionBoard *AuctionBoard) error{
-	if auctionBoard, found := as.auctionMap[auctionBoard.AuctionBoardUUID]; found == true{
-		as.auctionMap[auctionBoard.AuctionBoardUUID] = auctionBoard
+func (as *auctionStoreMockImpl)UpdateAuctionBoardInfo(updateAuctionBoard *AuctionBoard) error{
+	if auctionBoard, found := as.auctionMap[updateAuctionBoard.AuctionBoardUUID]; found == true{
+		boardToUpdate:= as.auctionMap[auctionBoard.AuctionBoardUUID] 
+		boardToUpdate.AuctionName = updateAuctionBoard.AuctionName
+		boardToUpdate.Purse = updateAuctionBoard.Purse
+		boardToUpdate.PurceCcy = updateAuctionBoard.PurceCcy
+		boardToUpdate.ScheduleTime = updateAuctionBoard.ScheduleTime
 		return nil
 	}
 	return sql.ErrNoRows

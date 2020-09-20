@@ -8,6 +8,7 @@ import (
 type LeagueAuctionDatastore struct{
 	LAUserstore 	UserStore
 	LAPlayerStore 	PlayerStore
+	LAAuctionStore 	AuctionStore
 }
 
 
@@ -19,6 +20,7 @@ func GetLeagueAuctionDatastore(dbObject *sql.DB) (*LeagueAuctionDatastore, error
 	ds := new(LeagueAuctionDatastore)
 	ds.LAUserstore 		= GetUserDBStore(dbObject)
 	ds.LAPlayerStore 	= GetPlayerDBStore(dbObject)
+	ds.LAAuctionStore 	= GetAuctionDBStore(dbObject)
 	return ds, nil
 }
 
@@ -28,5 +30,6 @@ func GetLeagueAuctionMockstore() (*LeagueAuctionDatastore, error){
 	ds := new(LeagueAuctionDatastore)
 	ds.LAUserstore 		= GetMockUserStore()
 	ds.LAPlayerStore 	= GetPlayerMockStore()
+	ds.LAAuctionStore 	= GetAuctionMockStore()
 	return ds, nil
 }

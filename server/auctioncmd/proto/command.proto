@@ -12,6 +12,9 @@ message AuctionRequest {
         FETCH_PLAYER_INFO_BY_PLAYER_UUID = 2;
         UPDATE_PLAYER_INFO = 3;
         CREATE_AUCTION_BOARD = 4;
+        UPDATE_AUCTION_BOARD = 5;
+        DELETE_AUCTION_BOARD = 6;
+        FETCH_AUCTION_BOARD_INFO = 7;
     }
     RequestType request_type = 1;
     oneof request {
@@ -19,6 +22,9 @@ message AuctionRequest {
         FetchPlayerInfoByPlayerUUIDRequest fetch_player_info_by_player_uuid_request = 3;
         UpdatePlayerInfoRequest update_player_info_request = 4;
         CreateAuctionBoardRequest create_auction_board_request = 5;
+        UpdateAuctionBoardRequest update_auction_board_request = 6;
+        DeleteAuctionBoardRequest delete_auction_board_request = 7;
+        FetchAuctionBoardRequest fetch_auction_board_request = 8;
     }
 }
 
@@ -29,6 +35,9 @@ message AuctionResponse {
         FETCH_PLAYER_INFO = 1;
         UPDATE_PLAYER_INFO = 2;
         CREATE_AUCTION_BOARD = 3;
+        UPDATE_AUCTION_BOARD = 4;
+        DELETE_AUCTION_BOARD = 5;
+        FETCH_AUCTION_BOARD = 6;
     }
     string errormsg = 1;
     ResponseType response_type = 2;
@@ -36,6 +45,9 @@ message AuctionResponse {
         FetchPlayerInfoResponse fetch_player_info_response = 3;
         UpdatePlayerInfoResponse update_player_info_response = 4;
         CreateAuctionBoardResponse create_auction_board_response = 5;
+        UpdateAuctionBoardResponse update_auction_board_response = 6;
+        DeleteAuctionBoardResponse delete_auction_board_response = 7;
+        FetchAuctionBoardResponse fetch_auction_board_response = 8;
     }
 }
 
@@ -94,14 +106,14 @@ message UpdatePlayerInfoResponse {
 message PlayerCategory{
     string category_name = 1;
     uint64 player_base_price = 2;
+    string category_uuid = 3;
     //repeated AuctionPlayer player_id_set = 3;
 }
 
 enum ParticipantRole {
-    VIEWER_ONLY = 0;
-    BIDDER = 1;
-    CO_AUCTIONEER = 2;
-    PLAYER_UNDER_HAMMER = 3;
+    CAPTAIN = 0;
+    PLAYER_UNDER_HAMMER = 1;
+    VIEWER = 2;
 }
 
 message AutionParticipant {
@@ -112,14 +124,51 @@ message AutionParticipant {
 
 message CreateAuctionBoardRequest {
     string auctioneer_player_uuid = 1;
-    google.protobuf.Timestamp schedule_time = 2;
-    uint64 purse_money = 3;
-    string purse_ccy = 4;
-    repeated PlayerCategory player_category_list = 5;
+    string auction_board_name = 2;
+    google.protobuf.Timestamp schedule_time = 3;
+    uint64 purse_money = 4;
+    string purse_ccy = 5;
+    repeated PlayerCategory player_category_list = 6;
     // repeated AutionParticipant participant_list = 5;
 }
 
 message CreateAuctionBoardResponse {
     string auction_board_uuid = 1;
     uint32 auction_code = 2;
+}
+
+message FetchAuctionBoardRequest {
+    string auction_board_uuid = 1;
+}
+
+message FetchAuctionBoardResponse{
+    string auctioneer_player_uuid = 1;
+    string auction_board_name = 2;
+    google.protobuf.Timestamp schedule_time = 3;
+    uint64 purse_money = 4;
+    string purse_ccy = 5;
+    repeated PlayerCategory player_category_list = 6;
+    uint32 auction_code = 7;
+    bool is_active = 8;
+}
+
+message DeleteAuctionBoardRequest {
+    string auction_board_uuid = 1;
+}
+
+message DeleteAuctionBoardResponse{
+    bool success = 1;
+}
+
+
+message UpdateAuctionBoardRequest {
+    string auction_board_uuid = 1;
+    string auction_board_name = 2;
+    google.protobuf.Timestamp schedule_time = 3;
+    uint64 purse_money = 4;
+    string purse_ccy = 5;
+}
+
+message UpdateAuctionBoardResponse{
+    bool success = 1;
 }

@@ -171,8 +171,8 @@ func TestWsConnectionWithSampleCommand(t *testing.T){
 	if loginResponse.Token == "" || loginResponse.Expiry == ""{
 		t.Fatal("CLIENT:: Expected valid login response. Actual: ", loginResponse)
 	}
-
-	conn := GetWebSocketConnection(t, auctionRouter, userid, loginResponse.Token)
+	
+	conn := GetWebSocketConnection(t, auctionRouter, loginResponse.UserUUID, loginResponse.Token)
 	cmdList := make([]testCommand, 0)
 
 	//create player info
