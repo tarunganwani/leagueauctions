@@ -34,6 +34,7 @@ func CreateRequestToAuctionBoardDBObject (createAuctionBoardCmd *pb.CreateAuctio
 		catDb.BasePrice = catPb.PlayerBasePrice
 		catDb.CategoryName = catPb.CategoryName
 		catDb.CategoryUUID = uuid.New()
+		auctionBoardDbObj.CategorySet = append(auctionBoardDbObj.CategorySet, catDb)
 	}
 	
 	return auctionBoardDbObj, nil

@@ -4,6 +4,7 @@ import(
 	"testing"
 	"github.com/leagueauctions/server/auctionctl"
 	"github.com/leagueauctions/server/database"
+	"github.com/leagueauctions/server/utils"
 	pb "github.com/leagueauctions/server/auctioncmd"
 	"github.com/golang/protobuf/ptypes"
 )
@@ -138,9 +139,11 @@ func TestCRUDAuctionCommands(t *testing.T){
 	if (fetchAuctionBoardInfoPb.IsActive != false) {
 		t.Fatal("FetchAuctionBoard : unexpected response active status, \n actual: ", fetchAuctionBoardInfoPb.IsActive, "\n expected:", false)
 	}
-	//TODO: compare proto times
-	// if (fetchAuctionBoardInfoPb.ScheduleTime != auctionboardRequest.ScheduleTime)  {
-	// 		t.Fatal("FetchAuctionBoard : unexpected response schedule time, \n\n actual: ", fetchAuctionBoardInfoPb.ScheduleTime, "\n\n expected:", auctionboardRequest.ScheduleTime)
-	// }
+	if (!utils.CompareCategoryListPb(fetchAuctionBoardInfoPb.GetPlayerCategoryList(), auctionboardRequest.PlayerCategoryList)) {
+		t.Fatal("FetchAuctionBoard : unexpected response player category list, \n actual : ", fetchAuctionBoardInfoPb.GetPlayerCategoryList(), "\n expected :", auctionboardRequest.PlayerCategoryList)
+	}
+	if (!utils.CompareDateTimePb(fetchAuctionBoardInfoPb.ScheduleTime, auctionboardRequest.ScheduleTime))  {
+			t.Fatal("FetchAuctionBoard : unexpected response schedule time, \n\n actual: ", fetchAuctionBoardInfoPb.ScheduleTime, "\n\n expected:", auctionboardRequest.ScheduleTime)
+	}
 
 }
