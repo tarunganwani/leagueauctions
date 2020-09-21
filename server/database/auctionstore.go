@@ -1,7 +1,7 @@
 package database
 
 import (
-	"log"
+	// "log"
 	"fmt"
 	"time"
 	"errors"
@@ -98,10 +98,10 @@ func (as *auctionStoreDbImpl)CreateAuctionBoard(auctionBoard *AuctionBoard) erro
 		cat.CategoryUUID = uuid.New()
 		cat.AuctionBoardUUID = auctionBoard.AuctionBoardUUID
 	}
-	for _, catVal := range auctionBoard.CategorySet{
-		log.Println("[DBG]cat val ", *catVal)
-	}
-	log.Println("[DBG]auctionBoard val ", *auctionBoard)
+	// for _, catVal := range auctionBoard.CategorySet{
+	// 	log.Println("[DBG]cat val ", *catVal)
+	// }
+	// log.Println("[DBG]auctionBoard val ", *auctionBoard)
 	err := as.db.QueryRow(createAuctionBoardQuery,
 							auctionBoard.AuctionBoardUUID, auctionBoard.AuctioneerUUID,
                             auctionBoard.AuctionName,

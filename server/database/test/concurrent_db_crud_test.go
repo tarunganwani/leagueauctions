@@ -7,6 +7,7 @@ import(
 	"github.com/google/uuid"
 	"fmt"
 	"log"
+	"sync"
 )
 
 func assertNoPanic(t *testing.T, f func(*testing.T)) {
@@ -65,7 +66,9 @@ func DoAuctionBoardCRUD(i int, t *testing.T){
 
 func ConcurrentAuctionBoards(t *testing.T){
 
-	ConcurrentAuctionBoardsRangeFn := func (lo, hi int) {
+	ConcurrentAuctionBoardsRangeFn := func (lo int, hi int, wg *sync.WaitGroup) {
+		
+		defer wg.Done() 
 		
 		log.Println("Creating auction board (db store) - range ", lo, "-", hi)
 		for i := lo; i <= hi; i++ {
@@ -73,10 +76,13 @@ func ConcurrentAuctionBoards(t *testing.T){
 		}
 	}
 
+	var wg sync.WaitGroup
 	for gi := 0; gi < 5; gi++{
-		ConcurrentAuctionBoardsRangeFn(gi*500 + 1, (gi + 1)*500)
+		go ConcurrentAuctionBoardsRangeFn(gi*500 + 1, (gi + 1)*500, &wg)
+		wg.Add(1)
 	}
 
+	wg.Wait()
 }
 
 func TestConcurrentDBOps(t *testing.T){
