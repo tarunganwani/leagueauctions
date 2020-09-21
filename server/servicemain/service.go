@@ -35,11 +35,11 @@ func (la *LeagueAuction)initUserMgmtRoutes(r *router.MuxWrapper,
 	return usrMgmtRouter.Init(r, laDatastore.LAUserstore)
 }
 
-// func (la *LeagueAuction)initAuctionRoutes(r *router.MuxWrapper, dbObject *sql.DB, conPool *auctionctl.UserConnectionPool) error{
+func (la *LeagueAuction)initAuctionRoutes(r *router.MuxWrapper, laDatastore *database.LeagueAuctionDatastore, conPool *auctionctl.UserConnectionPool) error{
 
-// 	auctionRouter := new(auctionctl.Router)
-// 	return auctionRouter.Init(r, dbObject,conPool)
-// }
+	auctionRouter := new(auctionctl.Router)
+	return auctionRouter.Init(r, laDatastore, conPool)
+}
 
 func (la *LeagueAuction)setupEndpoints(r *router.MuxWrapper, 
 										laDatastore *database.LeagueAuctionDatastore, 
@@ -48,9 +48,9 @@ func (la *LeagueAuction)setupEndpoints(r *router.MuxWrapper,
 	if err := la.initUserMgmtRoutes(r, laDatastore); err != nil{
 		return err
 	}
-	// if err := la.initAuctionRoutes(r, dbObject, conPool); err != nil{
-	// 	return err
-	// }
+	if err := la.initAuctionRoutes(r, laDatastore, conPool); err != nil{
+		return err
+	}
 	return nil
 }
 
