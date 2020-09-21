@@ -40,7 +40,7 @@ func setupAuctionStore(db *sql.DB) {
 func cleanup(db *sql.DB) {
 	db.Exec("DELETE FROM la_schema.la_user WHERE email_id like '%$$$$'")
 	db.Exec("DELETE FROM la_schema.la_player WHERE player_name like '%$$$$'")
-	db.Exec("DELETE FROM la_schema.la_auctionboard WHERE auction_name like '%$$$$'")
+	db.Exec("DELETE FROM la_schema.la_auctionboard WHERE auction_name like '%$$$$%'")
 	db.Exec("DELETE FROM la_schema.la_category WHERE category_name like '%$$$$'")
 }
 
