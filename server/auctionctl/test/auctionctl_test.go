@@ -1,14 +1,16 @@
 package test
 
 import (
+	"sync"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"bytes"
 	"time"
+	"math/rand"
 	// "strings"
-	// "fmt"
+	"fmt"
 	"log"
 	_ "github.com/lib/pq"
 	"github.com/leagueauctions/server/usermgmt"
@@ -137,14 +139,16 @@ type testCommand struct{
 	cmdname string
 }
 
-func GetWebSocketConnection(t *testing.T, auctionRouter *auctionctl.Router, userid string, token string) *websocket.Conn{
-
+func setupHTTPTestServer(auctionRouter *auctionctl.Router) *httptest.Server{
 	// ---- set up server to serve ws request ----
 	h := http.HandlerFunc(auctionRouter.UpgradeToWsHandler)
-	s := httptest.NewServer(h)
-	defer s.Close()
+	return httptest.NewServer(h)
+}
 
-	connectWsURL := "ws://" + s.Listener.Addr().String() + "/connect?user=" + userid + ";token=" + token
+func GetWebSocketConnection(t *testing.T, server *httptest.Server, userid string, token string) *websocket.Conn{
+
+	// ---- set up server to serve ws request ----
+	connectWsURL := "ws://" + server.Listener.Addr().String() + "/connect?user=" + userid + ";token=" + token
 	// connectWsURL := "ws://localhost:8080/connect?user=" + userid + ";token=" + loginResponse.Token
 	conn, resp, err := websocket.DefaultDialer.Dial(connectWsURL, nil)
 	if err != nil{
@@ -172,7 +176,10 @@ func TestWsConnectionWithSampleCommand(t *testing.T){
 		t.Fatal("CLIENT:: Expected valid login response. Actual: ", loginResponse)
 	}
 	
-	conn := GetWebSocketConnection(t, auctionRouter, loginResponse.UserUUID, loginResponse.Token)
+	server := setupHTTPTestServer(auctionRouter)
+	defer server.Close()
+
+	conn := GetWebSocketConnection(t, server, loginResponse.UserUUID, loginResponse.Token)
 	cmdList := make([]testCommand, 0)
 
 	//create player info
@@ -246,4 +253,70 @@ func TestWsConnectionWithSampleCommand(t *testing.T){
 	}
 
 	// log.Println("CLIENT:: WS connection Response ", resp)
+}
+
+
+func TestConcurrentWSConnections(t *testing.T){
+
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+	randIntRangeForSleep := 10
+	r, _, auctionRouter := initDBAndRouter(t)
+	server := setupHTTPTestServer(auctionRouter)
+	defer server.Close()
+
+
+	playerCreateAndFetchNtimesFn := func(emailid string, wg *sync.WaitGroup){
+
+		defer wg.Done()
+
+		sleepMs := r1.Intn(randIntRangeForSleep)
+		time.Sleep(time.Duration(sleepMs) * time.Millisecond)
+
+		userid := emailid
+		loginResponse := RegisterAndLoginUser(r, userid, "pwd123", "123456")
+		if loginResponse.Token == "" || loginResponse.Expiry == ""{
+			t.Fatal(emailid, " : [CLIENT] :: Expected valid login response. Actual: ", loginResponse)
+		}
+		
+		conn := GetWebSocketConnection(t, server, loginResponse.UserUUID, loginResponse.Token)
+
+		//create player info
+		updateAuctionCmdRequest := GetUpdatePlayerInfoRequest(loginResponse.UserUUID, "TG", 2)
+		log.Println(emailid, " : [CLIENT] :: Sending Command ")
+		protomsgCmdReqBytes, _ := proto.Marshal(updateAuctionCmdRequest)
+		err := conn.WriteMessage(websocket.BinaryMessage, protomsgCmdReqBytes)
+		_, message, err :=  conn.ReadMessage()
+		log.Println(emailid, " : [CLIENT] :: RESPONSE BYTES RECD", message)
+		if err != nil{
+			t.Error(emailid, " : [CLIENT] :: Response error", err.Error())
+		}
+
+		for i := 0; i < r1.Intn(10); i++{
+			sleepMs := r1.Intn(randIntRangeForSleep)
+			time.Sleep(time.Duration(sleepMs) * time.Millisecond)
+			auctionCmdRequest := FetchPlayerInfoByUserUUIDRequest(loginResponse.UserUUID)
+			log.Println(emailid, " : [CLIENT] :: Sending Command ")
+			protomsgCmdReqBytes, _ = proto.Marshal(auctionCmdRequest)
+			err = conn.WriteMessage(websocket.BinaryMessage, protomsgCmdReqBytes)
+			_, message, err =  conn.ReadMessage()
+			log.Println(emailid, " : [CLIENT] :: RESPONSE BYTES RECD", message)
+			if err != nil{
+				t.Error(emailid, " : [CLIENT] :: Response error", err.Error())
+			}
+		}
+	}
+
+
+	maxConcurrentConnections := 150
+
+	var wg sync.WaitGroup
+	for userNum := 1; userNum <= maxConcurrentConnections; userNum++{
+		emailid := fmt.Sprintf("mockuser%d@leagueauctions.com$$$$",userNum)
+		go playerCreateAndFetchNtimesFn(emailid, &wg)
+		wg.Add(1)
+	}
+	wg.Wait()
+
+
 }
