@@ -67,22 +67,29 @@ func GenerateFetchAuctionBoardResponse(auctionDbObj *database.AuctionBoard)(*pb.
 	if err != nil{
 		return nil, errors.New("time conversion error GenerateFetchAuctionBoardResponse")
 	}
-	fetchAuctionBoardResponsePb := new(pb.FetchAuctionBoardResponse)
-	fetchAuctionBoardResponsePb.AuctionBoardName = auctionDbObj.AuctionName
-	fetchAuctionBoardResponsePb.AuctionCode = auctionDbObj.AuctionCode
-	fetchAuctionBoardResponsePb.IsActive = auctionDbObj.IsActive
-	fetchAuctionBoardResponsePb.PurseCcy = auctionDbObj.PurceCcy
-	fetchAuctionBoardResponsePb.PurseMoney = auctionDbObj.Purse
-	fetchAuctionBoardResponsePb.ScheduleTime = timestampProto
-	fetchAuctionBoardResponsePb.AuctioneerPlayerUuid = utils.GetStringFromUUID(auctionDbObj.AuctioneerUUID)
+	auctionBoardInfoPb := new(pb.AuctionBoardInfo)
+	auctionBoardInfoPb.AuctionBoardName = auctionDbObj.AuctionName
+	auctionBoardInfoPb.AuctionCode = auctionDbObj.AuctionCode
+	auctionBoardInfoPb.IsActive = auctionDbObj.IsActive
+	auctionBoardInfoPb.PurseCcy = auctionDbObj.PurceCcy
+	auctionBoardInfoPb.PurseMoney = auctionDbObj.Purse
+	auctionBoardInfoPb.ScheduleTime = timestampProto
+	auctionBoardInfoPb.AuctioneerPlayerUuid = utils.GetStringFromUUID(auctionDbObj.AuctioneerUUID)
 
+	fetchAuctionBoardResponsePb := new(pb.FetchAuctionBoardResponse)
+	fetchAuctionBoardResponsePb.AuctionBoardInfo = auctionBoardInfoPb
+
+	playerCatSlice := make([]*pb.PlayerCategory, len(auctionDbObj.CategorySet))
+	sliceIndex := 0
 	for _, catDB := range auctionDbObj.CategorySet{
 		catPb := new(pb.PlayerCategory)
 		catPb.CategoryName = catDB.CategoryName
 		catPb.PlayerBasePrice = catDB.BasePrice
 		catPb.CategoryUuid = utils.GetStringFromUUID(catDB.CategoryUUID)
-		fetchAuctionBoardResponsePb.PlayerCategoryList = append(fetchAuctionBoardResponsePb.PlayerCategoryList, catPb)
+		playerCatSlice[sliceIndex] = catPb
+		sliceIndex++
 	}
+	fetchAuctionBoardResponsePb.AuctionBoardInfo.PlayerCategoryList = playerCatSlice
 
 	return fetchAuctionBoardResponsePb, nil
 }

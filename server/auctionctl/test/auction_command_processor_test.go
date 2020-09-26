@@ -123,27 +123,27 @@ func TestCRUDAuctionCommands(t *testing.T){
 		t.Fatal("FetchAuctionBoard : Bad response")
 	}
 
-	fetchAuctionBoardInfoPb := fetchAuctionResponse.GetFetchAuctionBoardResponse()
-	if (fetchAuctionBoardInfoPb.AuctionBoardName != newBoardName){
-		t.Fatal("FetchAuctionBoard : unexpected response boardname, \n actual: ", fetchAuctionBoardInfoPb.AuctionBoardName, "\n expected:", newBoardName)
+	auctionBoardInfoPb := fetchAuctionResponse.GetFetchAuctionBoardResponse().AuctionBoardInfo
+	if (auctionBoardInfoPb.AuctionBoardName != newBoardName){
+		t.Fatal("FetchAuctionBoard : unexpected response boardname, \n actual: ", auctionBoardInfoPb.AuctionBoardName, "\n expected:", newBoardName)
 	}
-	if fetchAuctionBoardInfoPb.PurseMoney != newPurse {
-		t.Fatal("FetchAuctionBoard : unexpected response purse money, \n actual: ", fetchAuctionBoardInfoPb.PurseMoney, "\n expected:", newPurse)
+	if auctionBoardInfoPb.PurseMoney != newPurse {
+		t.Fatal("FetchAuctionBoard : unexpected response purse money, \n actual: ", auctionBoardInfoPb.PurseMoney, "\n expected:", newPurse)
 	}
-	if (fetchAuctionBoardInfoPb.PurseCcy != newCcy) {
-		t.Fatal("FetchAuctionBoard : unexpected response purse ccy, \n actual: ", fetchAuctionBoardInfoPb.PurseCcy, "\n expected:", newCcy)
+	if (auctionBoardInfoPb.PurseCcy != newCcy) {
+		t.Fatal("FetchAuctionBoard : unexpected response purse ccy, \n actual: ", auctionBoardInfoPb.PurseCcy, "\n expected:", newCcy)
 	}
-	if (fetchAuctionBoardInfoPb.AuctioneerPlayerUuid != player.PlayerID.String()) {
-		t.Fatal("FetchAuctionBoard : unexpected response player id, \n actual: ", fetchAuctionBoardInfoPb.AuctioneerPlayerUuid, "\n expected:", player.PlayerID.String())
+	if (auctionBoardInfoPb.AuctioneerPlayerUuid != player.PlayerID.String()) {
+		t.Fatal("FetchAuctionBoard : unexpected response player id, \n actual: ", auctionBoardInfoPb.AuctioneerPlayerUuid, "\n expected:", player.PlayerID.String())
 	}
-	if (fetchAuctionBoardInfoPb.IsActive != false) {
-		t.Fatal("FetchAuctionBoard : unexpected response active status, \n actual: ", fetchAuctionBoardInfoPb.IsActive, "\n expected:", false)
+	if (auctionBoardInfoPb.IsActive != false) {
+		t.Fatal("FetchAuctionBoard : unexpected response active status, \n actual: ", auctionBoardInfoPb.IsActive, "\n expected:", false)
 	}
-	if (!utils.CompareCategoryListPb(fetchAuctionBoardInfoPb.GetPlayerCategoryList(), auctionboardRequest.PlayerCategoryList)) {
-		t.Fatal("FetchAuctionBoard : unexpected response player category list, \n actual : ", fetchAuctionBoardInfoPb.GetPlayerCategoryList(), "\n expected :", auctionboardRequest.PlayerCategoryList)
+	if (!utils.CompareCategoryListPb(auctionBoardInfoPb.GetPlayerCategoryList(), auctionboardRequest.PlayerCategoryList)) {
+		t.Fatal("FetchAuctionBoard : unexpected response player category list, \n actual : ", auctionBoardInfoPb.GetPlayerCategoryList(), "\n expected :", auctionboardRequest.PlayerCategoryList)
 	}
-	if (!utils.CompareDateTimePb(fetchAuctionBoardInfoPb.ScheduleTime, auctionboardRequest.ScheduleTime))  {
-			t.Fatal("FetchAuctionBoard : unexpected response schedule time, \n\n actual: ", fetchAuctionBoardInfoPb.ScheduleTime, "\n\n expected:", auctionboardRequest.ScheduleTime)
+	if (!utils.CompareDateTimePb(auctionBoardInfoPb.ScheduleTime, auctionboardRequest.ScheduleTime))  {
+			t.Fatal("FetchAuctionBoard : unexpected response schedule time, \n\n actual: ", auctionBoardInfoPb.ScheduleTime, "\n\n expected:", auctionboardRequest.ScheduleTime)
 	}
 
 }

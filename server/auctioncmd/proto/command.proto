@@ -15,6 +15,9 @@ message AuctionRequest {
         UPDATE_AUCTION_BOARD = 5;
         DELETE_AUCTION_BOARD = 6;
         FETCH_AUCTION_BOARD_INFO = 7;
+        JOIN_AUCTION = 8;
+        CHANGE_PARTICIPANT_ROLE = 9;
+        FETCH_PARTICIPANT_LIST = 10;
     }
     RequestType request_type = 1;
     oneof request {
@@ -25,6 +28,9 @@ message AuctionRequest {
         UpdateAuctionBoardRequest update_auction_board_request = 6;
         DeleteAuctionBoardRequest delete_auction_board_request = 7;
         FetchAuctionBoardRequest fetch_auction_board_request = 8;
+        JoinAuctionBoardRequest join_auction_board_request = 9;
+        ChangeParticipantRoleRequest change_participant_role_request = 10;
+        FetchParticipantListRequest fetch_participant_list_request = 11;
     }
 }
 
@@ -38,6 +44,9 @@ message AuctionResponse {
         UPDATE_AUCTION_BOARD = 4;
         DELETE_AUCTION_BOARD = 5;
         FETCH_AUCTION_BOARD = 6;
+        JOIN_AUCTION = 7;
+        CHANGE_PARTICIPANT_ROLE = 8;
+        FETCH_PARTICIPANT_LIST = 9;
     }
     string errormsg = 1;
     ResponseType response_type = 2;
@@ -48,6 +57,9 @@ message AuctionResponse {
         UpdateAuctionBoardResponse update_auction_board_response = 6;
         DeleteAuctionBoardResponse delete_auction_board_response = 7;
         FetchAuctionBoardResponse fetch_auction_board_response = 8;
+        JoinAuctionBoardResponse join_auction_board_response = 9;
+        ChangeParticipantRoleResponse change_participant_role_response = 10;
+        FetchParticipantListResponse fetch_participant_list_response = 11;
     }
 }
 
@@ -111,15 +123,11 @@ message PlayerCategory{
 }
 
 enum ParticipantRole {
-    CAPTAIN = 0;
+    VIEWER = 0;
     PLAYER_UNDER_HAMMER = 1;
-    VIEWER = 2;
-}
-
-message AutionParticipant {
-    string player_id = 1;
-    ParticipantRole participant_role = 2;
-    PlayerCategory player_category = 3; //optional player category - set when role = PLAYER_UNDER_HAMMER
+    CAPTAIN = 2;
+    AUCTIONEER = 3;
+    AUCTIONEER_PLAYER = 4;
 }
 
 message CreateAuctionBoardRequest {
@@ -141,7 +149,7 @@ message FetchAuctionBoardRequest {
     string auction_board_uuid = 1;
 }
 
-message FetchAuctionBoardResponse{
+message AuctionBoardInfo{
     string auctioneer_player_uuid = 1;
     string auction_board_name = 2;
     google.protobuf.Timestamp schedule_time = 3;
@@ -150,6 +158,10 @@ message FetchAuctionBoardResponse{
     repeated PlayerCategory player_category_list = 6;
     uint32 auction_code = 7;
     bool is_active = 8;
+}
+
+message FetchAuctionBoardResponse{
+    AuctionBoardInfo auction_board_info = 1;
 }
 
 message DeleteAuctionBoardRequest {
@@ -171,4 +183,42 @@ message UpdateAuctionBoardRequest {
 
 message UpdateAuctionBoardResponse{
     bool success = 1;
+}
+
+
+message JoinAuctionBoardRequest{
+    string auctioneer_player_uuid = 1;
+    string auction_board_uuid = 2;
+    ParticipantRole participant_role = 3;
+    string auction_category_id = 4; //optional player category - set when role = PLAYER_UNDER_HAMMER
+}
+
+message JoinAuctionBoardResponse{
+    bool success = 1;
+}
+
+
+message ChangeParticipantRoleRequest{
+    repeated string auctioneer_player_uuid = 1;
+    string auction_board_uuid = 2;
+    ParticipantRole participant_role = 3;
+    string auction_category_id = 4; //optional player category - set when role = PLAYER_UNDER_HAMMER
+}
+
+message ChangeParticipantRoleResponse{
+    bool success = 1;
+}
+
+message FetchParticipantListRequest{
+    string auction_board_uuid = 1;
+}
+
+message AuctionParticipant{
+    string auctioneer_player_uuid = 1;
+    ParticipantRole participant_role = 2;
+    string auction_category_id = 3;
+}
+
+message FetchParticipantListResponse{
+    repeated AuctionParticipant auction_participant_list = 1;
 }
