@@ -187,7 +187,7 @@ message UpdateAuctionBoardResponse{
 
 
 message JoinAuctionBoardRequest{
-    string auctioneer_player_uuid = 1;
+    string participant_player_uuid = 1;
     string auction_board_uuid = 2;
     ParticipantRole participant_role = 3;
     string auction_category_id = 4; //optional player category - set when role = PLAYER_UNDER_HAMMER
@@ -199,7 +199,7 @@ message JoinAuctionBoardResponse{
 
 
 message ChangeParticipantRoleRequest{
-    repeated string auctioneer_player_uuid = 1;
+    repeated string participant_player_uuid = 1;
     string auction_board_uuid = 2;
     ParticipantRole participant_role = 3;
     string auction_category_id = 4; //optional player category - set when role = PLAYER_UNDER_HAMMER
@@ -214,7 +214,7 @@ message FetchParticipantListRequest{
 }
 
 message AuctionParticipant{
-    string auctioneer_player_uuid = 1;
+    string participant_player_uuid = 1;
     ParticipantRole participant_role = 2;
     string auction_category_id = 3;
 }

@@ -18,6 +18,7 @@ const (
 var userstoresMap map[string]database.UserStore
 var playerstoresMap map[string]database.PlayerStore
 var auctionstoresMap map[string]database.AuctionStore
+var participantstoresMap map[string]database.ParticipantStore
 
 func setupUserStore(db *sql.DB) {
 	userstoresMap = make(map[string]database.UserStore)
@@ -37,6 +38,12 @@ func setupAuctionStore(db *sql.DB) {
 	auctionstoresMap[mockStoreName] = database.GetAuctionMockStore()
 }
 
+func setupParticipantStore(db *sql.DB) {
+	participantstoresMap = make(map[string]database.ParticipantStore)
+	participantstoresMap[dbStoreName] = database.GetParticipantDBStore(db)
+	participantstoresMap[mockStoreName] = database.GetParticipantMockStore(auctionstoresMap[mockStoreName])
+}
+
 func cleanup(db *sql.DB) {
 	db.Exec("DELETE FROM la_schema.la_user WHERE email_id like '%$$$$'")
 	db.Exec("DELETE FROM la_schema.la_player WHERE player_name like '%$$$$'")
@@ -54,6 +61,7 @@ func setup() (*sql.DB, error){
 	setupUserStore(db)
 	setupProfileStore(db)
 	setupAuctionStore(db)
+	setupParticipantStore(db)
 	
 	return db, nil
 }
