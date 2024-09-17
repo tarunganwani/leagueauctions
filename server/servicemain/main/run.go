@@ -2,17 +2,34 @@ package main
 
 import (
 	"log"
+<<<<<<< HEAD
+
+	"github.com/leagueauctions/server/router"
+=======
 	"os"
 
 	"github.com/leagueauctions/server/libs/router"
+>>>>>>> upstream/master
 	"github.com/leagueauctions/server/servicemain"
 	_ "github.com/lib/pq"
 )
 
+<<<<<<< HEAD
+func main() {
+
+	routerCfg := router.Config{
+		HostAddress:  "192.168.1.22",
+		PortNo:       8080,
+		Secure:       true,
+		CertFilePath: "../../certs/cert1.cer",
+		KeyPath:      "../../certs/key1.cer",
+	}
+=======
 
 func main() {
 
 	routerCfg := bakeRouterCfg()
+>>>>>>> upstream/master
 	laService := new(servicemain.LeagueAuction)
 	log.Println("Initializing service...")
 	err := laService.InitApp(routerCfg)
@@ -25,6 +42,8 @@ func main() {
 		log.Fatal(err.Error())
 	}
 }
+<<<<<<< HEAD
+=======
 
 
 func bakeRouterCfg() router.Config{
@@ -59,3 +78,4 @@ func bakeRouterCfg() router.Config{
 	}
 	
 }
+>>>>>>> upstream/master

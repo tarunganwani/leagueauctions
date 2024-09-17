@@ -1,0 +1,7 @@
+{
+    "server": "smtp.gmail.com",
+    "port": 587,
+    "sender": "leagueauctions@gmail.com",
+    "password": "League@123",
+    "recipient": "piyushbudhrani@gmail.com"
+}
